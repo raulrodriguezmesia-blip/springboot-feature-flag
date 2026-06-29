@@ -67,6 +67,15 @@ hpaCustom:
   requestsPerSecond: 100
   cpuUtilization: 70
 
+# VPA configuration
+vpa:
+  enabled: true
+  minCpu: 200m
+  minMemory: 256Mi
+  maxCpu: 2000m
+  maxMemory: 4Gi
+  updateMode: Auto
+
 # Resource configuration
 resources:
   requests:

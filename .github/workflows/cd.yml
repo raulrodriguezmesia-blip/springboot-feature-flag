@@ -73,14 +73,18 @@ jobs:
           kubectl rollout status deployment/springboot-feature-flag -n production --timeout=60s
         continue-on-error: true
         id: verify
-      - name: Verify HPA (resource based)
+      - name: Verify HPA
         run: |
           kubectl get hpa springboot-feature-flag-hpa -n production -o yaml
-          kubectl describe hpa springboot-feature-flag-hpa -n production
-      - name: Verify HPA Custom (requests per second)
+          kubectl describe hpa springboot-feature-flag-hpa -n production || true
+      - name: Verify HPA Custom
         run: |
           kubectl get hpa springboot-feature-flag-hpa-custom -n production -o yaml
-          kubectl describe hpa springboot-feature-flag-hpa-custom -n production
+          kubectl describe hpa springboot-feature-flag-hpa-custom -n production || true
+      - name: Verify VPA
+        run: |
+          kubectl get vpa springboot-feature-flag-vpa -n production -o yaml
+          kubectl describe vpa springboot-feature-flag-vpa -n production || true
       - name: Rollback on failure
         if: steps.verify.outcome == 'failure'
         run: |
