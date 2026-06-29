@@ -99,6 +99,19 @@ reports:
     notifySlack: true
     notifyTeams: true
 
+# Cloud Archive configuration
+cloudArchive:
+  enabled: true
+  versioning: true
+  namingConvention: resilience-report-<date>-v<version>
+  indexFile: true
+  providers:
+    - onedrive
+    - googleDrive
+  folder: ResilienceReports
+  notifySlack: true
+  notifyTeams: true
+
 # Resource configuration
 resources:
   requests:
