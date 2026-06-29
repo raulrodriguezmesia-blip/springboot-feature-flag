@@ -1,0 +1,176 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quarterly Resilience Audit - Q2 2026</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background: #0f0c29; color: #fff; }
+    .slide { width: 100vw; height: 100vh; padding: 60px; display: flex; flex-direction: column; page-break-after: always; background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); }
+    .slide-content { max-width: 900px; margin: 0 auto; flex: 1; }
+    h1 { font-size: 2.8em; background: linear-gradient(90deg, #00d4ff, #7b2cbf); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; }
+    h2 { font-size: 2em; color: #00d4ff; margin: 20px 0; }
+    h3 { color: #7b2cbf; margin: 10px 0; }
+    .subtitle { font-size: 1.3em; color: #aaa; margin-bottom: 30px; }
+    .metric { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; margin: 15px 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #4a4a6a; }
+    th { color: #7b2cbf; }
+    .chart-container { height: 200px; margin: 20px 0; }
+    .status-green { color: #00ff88; }
+    .status-red { color: #ff4444; }
+    .status-indicator { display: inline-block; width: 15px; height: 15px; border-radius: 50%; margin-right: 8px; }
+    .green-dot { background: #00ff88; }
+    .red-dot { background: #ff4444; }
+  </style>
+</head>
+<body>
+  <!-- Portada -->
+  <section class="slide">
+    <div class="slide-content">
+      <h1>Quarterly Resilience Audit</h1>
+      <p class="subtitle">Springboot Feature Flag – Multi-Cloud Resilience</p>
+      <p style="font-size: 1.2em; color: #aaa;">Q2 2026 • 2026-06-29</p>
+      <div style="margin-top: 40px;">
+        <span class="status-indicator green-dot"></span>
+        <span>🛡️ 99.92% Uptime • 🔄 3 Failovers • ✅ 100% Resilience</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Agenda -->
+  <section class="slide">
+    <div class="slide-content">
+      <h2>Agenda</h2>
+      <ol style="font-size: 1.3em; line-height: 2;">
+        <li>Introducción</li>
+        <li>Métricas de Resiliencia</li>
+        <li>Failover Multi-Cloud</li>
+        <li>Chaos Engineering</li>
+        <li>Alertas y Notificaciones</li>
+        <li>Conclusiones y Próximos Pasos</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Métricas de Resiliencia -->
+  <section class="slide">
+    <div class="slide-content">
+      <h2>Métricas de Resiliencia</h2>
+      <div class="chart-container"><canvas id="uptimeChart"></canvas></div>
+      <div class="chart-container"><canvas id="latencyChart"></canvas></div>
+      <table>
+        <tr><th>Cluster</th><th>Pods Pre-test</th><th>Pods During</th><th>Pods Post</th></tr>
+        <tr><td>AKS (Primary)</td><td>2</td><td>0-2</td><td>2</td></tr>
+        <tr><td>GKE (Secondary)</td><td>2</td><td>2</td><td>2</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- Failover Multi-Cloud -->
+  <section class="slide">
+    <div class="slide-content">
+      <h2>Failover Multi-Cloud</h2>
+      <div style="display: flex; gap: 30px; margin: 20px 0;">
+        <span><span class="status-indicator red-dot"></span>AKS Status</span>
+        <span><span class="status-indicator green-dot"></span>GKE Status</span>
+      </div>
+      <pre style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 10px;">
+Failover Timeline Q2 2026:
+0s     AKS Healthy     ████
+30s    Health Probe    ████
+45s    Failover        ████→GKE Active
+60s    Traffic Reroute ████
+</pre>
+      <p>✅ Failover automático validado entre AKS y GKE (45s avg)</p>
+    </div>
+  </section>
+
+  <!-- Chaos Engineering -->
+  <section class="slide">
+    <div class="slide-content">
+      <h2>Chaos Engineering</h2>
+      <table>
+        <tr><th>Experiment</th><th>Executions</th><th>Status</th></tr>
+        <tr><td>Pod Delete</td><td>13</td><td class="status-green">✅ Passed</td></tr>
+        <tr><td>Network Loss</td><td>13</td><td class="status-green">✅ Passed</td></tr>
+        <tr><td>CPU Hog</td><td>13</td><td class="status-green">✅ Passed</td></tr>
+      </table>
+      <div class="chart-container"><canvas id="chaosChart"></canvas></div>
+    </div>
+  </section>
+
+  <!-- Alertas -->
+  <section class="slide">
+    <div class="slide-content">
+      <h2>Alertas y Notificaciones</h2>
+      <ul style="font-size: 1.2em; line-height: 2;">
+        <li>📊 HighCPUUsage: 2 alerts (4m avg resolution)</li>
+        <li>⚠️ HighMemoryUsage: 1 alert (3m avg resolution)</li>
+        <li>🔄 Failover Triggered: 3 events</li>
+      </ul>
+      <pre style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin-top: 20px;">
+Slack: 31 messages sent
+Teams: 12 notifications sent
+Auto-healing: 100% effective
+</pre>
+    </div>
+  </section>
+
+  <!-- Conclusiones -->
+  <section class="slide">
+    <div class="slide-content">
+      <h2>Conclusiones Ejecutivas</h2>
+      <div class="metric">
+        <h3>Resilience Level: <span class="status-green">🟢 Alto</span></h3>
+        <p>• Uptime: 99.92% (SLA 99.5%)</p>
+        <p>• Failover: 45s avg (Target < 90s)</p>
+        <p>• Chaos Tests: 100% passed</p>
+      </div>
+      <h3>Áreas de Mejora</h3>
+      <ul>
+        <li>Reducir failover GKE de 58s → <50s</li>
+        <li>Ajustar memory threshold a 750Mi</li>
+        <li>Agregar Pod Disruption Budget</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Próximos Pasos -->
+  <section class="slide">
+    <div class="slide-content">
+      <h2>Próximos Pasos</h2>
+      <ol style="font-size: 1.2em; line-height: 2;">
+        <li>📊 Integrar métricas históricas en Grafana</li>
+        <li>⚙️ Optimizar thresholds HPA/VPA</li>
+        <li>🧪 Nuevos experimentos Chaos (pod-network, node-cpu)</li>
+        <li>📅 Auditoría global Q3 2026</li>
+      </ol>
+      <p style="margin-top: 30px; color: #aaa;">Export as PDF via Ctrl+P → Save as PDF</p>
+    </div>
+  </section>
+
+  <script>
+    new Chart(document.getElementById("uptimeChart"), {
+      type: "bar",
+      data: {
+        labels: ["Apr-W1", "Apr-W2", "Apr-W3", "Apr-W4", "May-W1", "May-W2", "May-W3", "May-W4", "Jun-W1", "Jun-W2", "Jun-W3", "Jun-W4"],
+        datasets: [{ label: "Uptime %", data: [99.9, 99.8, 99.9, 100, 99.7, 99.9, 99.8, 100, 99.9, 99.9, 99.8, 99.7], backgroundColor: "#00d4ff" }]
+      },
+      options: { responsive: true, scales: { y: { min: 95, max: 100 } } }
+    });
+    new Chart(document.getElementById("latencyChart"), {
+      type: "line",
+      data: { labels: ["Pre", "During", "Post"], datasets: [{ label: "Latency (ms)", data: [45, 58, 48], borderColor: "#7b2cbf", tension: 0.4 }] },
+      options: { responsive: true }
+    });
+    new Chart(document.getElementById("chaosChart"), {
+      type: "doughnut",
+      data: { labels: ["Passed", "Failed"], datasets: [{ data: [39, 0], backgroundColor: ["#00ff88", "#ff4444"] }] },
+      options: { responsive: true }
+    });
+  </script>
+</body>
+</html>
