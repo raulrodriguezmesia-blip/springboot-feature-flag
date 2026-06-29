@@ -4,7 +4,7 @@
 
 **Servicio de gestión de features dinámicas con Spring Boot 3.x | Java 21 | DevOps Pro**
 
-*Para ver la portada completa, visita el repositorio en [github.com/raulrodriguezmesia-blip/springboot-feature-flag](https://github.com/raulrodriguezmesia-blip/springboot-feature-flag).*
+Un microservicio listo para producción que permite activar o desactivar funciones de la aplicación en tiempo de ejecución sin necesidad de redistribuirla. Desarrollado con Spring Boot 3.x y Java 21 , combina seguridad de nivel empresarial, observabilidad y herramientas de implementación nativas de la nube.Para ver la portada completa, visita el repositorio en [github.com/raulrodriguezmesia-blip/springboot-feature-flag](https://github.com/raulrodriguezmesia-blip/springboot-feature-flag).*
 
 ---
 
