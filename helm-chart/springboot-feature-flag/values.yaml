@@ -125,6 +125,43 @@ quarterlyPresentation:
   notifyTeams: true
   schedule: quarterly
 
+# Dynamic Language Narrative configuration
+narrativeDynamicLanguage:
+  enabled: true
+  rules:
+    CTO: en
+    CEO: es
+    Recruiters: bilingual
+  formats:
+    - pptx
+    - pdf
+    - canva
+  archive:
+    - onedrive
+    - googleDrive
+  notifySlack: true
+  notifyTeams: true
+
+# Calendar Integration configuration
+calendarIntegration:
+  enabled: true
+  providers:
+    - outlook
+    - google_calendar
+  rules:
+    CTO: en
+    CEO: es
+    Recruiters: bilingual
+  formats:
+    - pptx
+    - pdf
+    - canva
+  archive:
+    - onedrive
+    - googleDrive
+  notifySlack: true
+  notifyTeams: true
+
 # Resource configuration
 resources:
   requests:

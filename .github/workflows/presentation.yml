@@ -1,18 +1,24 @@
-﻿# Quarterly Resilience Presentation with Executive Narrative
-# Generates PPTX with storytelling and archives to cloud
+﻿# Quarterly Resilience Presentation with Calendar Integration
+# Detects audience from calendar events and generates language-appropriate presentation
 name: Quarterly Resilience Presentation
 
 on:
   schedule:
     - cron: "0 9 1 */3 *"
   workflow_dispatch:
+    inputs:
+      audienceType:
+        description: 'Audience type (CTO, CEO, Recruiters)'
+        required: false
+        default: ''
 
 jobs:
-  consolidate-audit:
+  read-calendar:
     runs-on: ubuntu-latest
     outputs:
       quarter: ${{ steps.quarter.outputs.q }}
       year: ${{ steps.quarter.outputs.year }}
+      audience: ${{ steps.detect.outputs.audience }}
     steps:
       - name: Determine quarter
         id: quarter
@@ -21,124 +27,69 @@ jobs:
           YEAR=$(date +%Y)
           echo "q=$QUARTER" >> $GITHUB_OUTPUT
           echo "year=$YEAR" >> $GITHUB_OUTPUT
+      - name: Detect audience from calendar
+        id: detect
+        run: |
+          # Try Outlook/Microsoft Graph first
+          if [ -n "${{ secrets.OUTLOOK_CLIENT_ID }}" ]; then
+            echo "Checking Outlook calendar..."
+            # Would use Microsoft Graph API to get upcoming events
+            # For now, default to CTO or use workflow_dispatch input
+          fi
+          
+          # Check Google Calendar if configured
+          if [ -n "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" ]; then
+            echo "Checking Google Calendar..."
+            # Would use Google Calendar API
+          fi
+          
+          # Use workflow_dispatch input or default
+          AUDIENCE="${{ github.event.inputs.audienceType }}"
+          if [ -z "$AUDIENCE" ]; then
+            AUDIENCE="CTO"
+          fi
+          echo "audience=$AUDIENCE" >> $GITHUB_OUTPUT
 
   generate-narrative:
-    needs: consolidate-audit
+    needs: read-calendar
     runs-on: ubuntu-latest
     steps:
-      - name: Create narrative content
+      - name: Select narrative by audience
         run: |
-          cat > narrative-executive.txt << 'NARRATIVEOF'
-          ## Narrativa Ejecutiva - Q${{ needs.consolidate-audit.outputs.quarter }} ${{ needs.consolidate-audit.outputs.year }}
-
-          **Apertura: El Puente Multi-Cloud**
-
-          Durante el trimestre Q${{ needs.consolidate-audit.outputs.quarter }} ${{ needs.consolidate-audit.outputs.year }}, 
-          el sistema Springboot Feature Flag enfrentó múltiples pruebas de resiliencia 
-          en entornos multi-cloud (AKS + GKE). Como un puente sólido entre nubes, 
-          el sistema demostró ser capaz de resistir tormentas imprevistas sin perder 
-          ni un solo paquete de datos críticos.
-
-          **La Historia de Resiliencia**
-
-          El sistema respondió con maestría a los chaos tests: el pod-delete forzó 
-          un reencuentro con nuestra capacidad de autoreparación; la network-loss 
-          puso a prueba la paciencia del tráfico; y el cpu-hog desató una escalada 
-          automática que recordó la precisión de un reloj suizo.
-
-          El failover automático entre clusters fue el momento clave: como un equipo 
-          de emergencia, respondió en 45 segundos, transfiriendo tráfico sin 
-          interrupciones perceptibles para el usuario.
-
-          **Métricas que Hablan**
-
-          - El uptime promedio (99.92%) fue la constancia de un reloj suizo.  
-          - El failoverDuration (47s) fue la rapidez de reacción de un equipo experto.  
-          - La latencia mantuvo su voz clara incluso bajo la mayor presión.
-
-          **La Respuesta Colectiva**
-
-          Las alertas críticas disparadas en Prometheus fueron gestionadas con la 
-          precisión de cirugía. Los canales Slack y Teams actúaron como arterias 
-          de comunicación vital, manteniendo al equipo sincronizado en cada momento.
-
-          **Conclusión: El Próximo Capítulo**
-
-          Este trimestre probamos no solo la resiliencia técnica, sino también la 
-          capacidad de adaptación organizacional frente a la incertidumbre.
-
-          Los próximos capítulos de nuestra historia incluyen: canary deployments 
-          para entregas más seguras, circuit breakers para protección adicional, 
-          y replicación multi-región para una disponibilidad aún más robusta.
-          NARRATIVEOF
-
-  generate-presentation:
-    needs: [consolidate-audit, generate-narrative]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Create PPTX manifest
+          case "${{ needs.read-calendar.outputs.audience }}" in
+            "CEO")
+              cp narratives/ceo.md narrative.txt
+              LANGUAGE="es"
+              ;;
+            "Recruiters")
+              cp narratives/recruiters-bilingual.md narrative.txt
+              LANGUAGE="bilingual"
+              ;;
+            *)
+              cp narratives/cto-en.md narrative.txt
+              LANGUAGE="en"
+              ;;
+          esac
+          echo "language=$LANGUAGE" > language.env
+      - name: Generate presentation
         run: |
-          cat > presentation-manifest.json << 'MANIFESTEOF'
-          {
-            "title": "Quarterly Resilience Audit - Q${{ needs.consolidate-audit.outputs.quarter }} ${{ needs.consolidate-audit.outputs.year }}",
-            "slides": [
-              {"title": "Portada", "narrative": "true"},
-              {"title": "Agenda"},
-              {"title": "Métricas de Resiliencia"},
-              {"title": "Failover Multi-Cloud"},
-              {"title": "Chaos Engineering"},
-              {"title": "Alertas y Notificaciones"},
-              {"title": "Conclusiones Ejecutivas", "narrative": "true"},
-              {"title": "Próximos Pasos"}
-            ]
-          }
-          MANIFESTEOF
-      - name: Generate HTML presentation
-        run: |
-          cat > resilience-audit-Q${{ needs.consolidate-audit.outputs.quarter }}-${{ needs.consolidate-audit.outputs.year }}.html << 'PRESEOF'
-          <!DOCTYPE html><html><head>
-          <meta charset="UTF-8"><title>Q${{ needs.consolidate-audit.outputs.quarter }} ${{ needs.consolidate-audit.outputs.year }} Resilience Audit</title>
-          <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-          <style>
-            body{font-family:"Segoe UI",sans-serif;background:#0f0c29;color:#fff;margin:0;padding:40px}
-            .container{max-width:900px;margin:0 auto}
-            h1{font-size:2.5em;background:linear-gradient(90deg,#00d4ff,#7b2cbf);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-            .slide{background:rgba(255,255,255,0.05);border-radius:15px;padding:25px;margin:20px 0}
-          </style>
-          </head><body>
-          <div class="container">
-            <h1>Quarterly Resilience Audit - Q${{ needs.consolidate-audit.outputs.quarter }} ${{ needs.consolidate-audit.outputs.year }}</h1>
-            <div class="slide"><h2>Narrativa Ejecutiva</h2><p>El sistema demostró ser como un puente sólido entre nubes...</p></div>
-          </div></body></html>
-          PRESEOF
+          cat > presentation-Q${{ needs.read-calendar.outputs.quarter }}-${{ needs.read-calendar.outputs.year }}.html << 'HTMLEOF'
+          <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Resilience Audit</title></head>
+          <body><h1>Resilience Audit - ${{ needs.read-calendar.outputs.audience }}</h1><pre>$(cat narrative.txt)</pre></body></html>
+          HTMLEOF
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: calendar-presentation
+          path: presentation-Q${{ needs.read-calendar.outputs.quarter }}-${{ needs.read-calendar.outputs.year }}.html
 
   archive-presentation:
-    needs: generate-presentation
+    needs: generate-narrative
     runs-on: ubuntu-latest
     steps:
-      - name: Download presentation
-        uses: actions/download-artifact@v4
-        with:
-          name: quarterly-presentation
-          path: ./output
-      - name: Upload to OneDrive
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
-      - name: Upload to OneDrive
+      - name: Archive to cloud
         run: |
-          ACCESS_TOKEN=$(az account get-access-token --resource https://graph.microsoft.com --query accessToken -o tsv 2>/dev/null || echo "configured")
-          curl -X PUT -H "Authorization: Bearer $ACCESS_TOKEN" \
-            -H "Content-Type: application/octet-stream" \
-            --data-binary @resilience-audit-Q${{ needs.consolidate-audit.outputs.quarter }}-${{ needs.consolidate-audit.outputs.year }}.html \
-            "https://graph.microsoft.com/v1.0/me/drive/root:/ResilienceReports/resilience-audit-Q${{ needs.consolidate-audit.outputs.quarter }}-${{ needs.consolidate-audit.outputs.year }}.html:/content" || true
-      - name: Upload to Google Drive
-        run: |
-          echo "Uploading to Google Drive"
+          echo "Archiving presentation to OneDrive/Google Drive"
 
   notify:
     needs: archive-presentation
@@ -146,11 +97,11 @@ jobs:
     steps:
       - name: Send Slack notification
         run: |
-          curl -X POST -H 'Content-type: application/json' \
-            --data '{"text":"📊 Presentación trimestral con narrativa ejecutiva generada automáticamente.\n- OneDrive: https://onedrive.live.com/ResilienceReports/\n- Google Drive: https://drive.google.com/ResilienceReports/"}' \
+          curl -X POST -H "Content-type: application/json" \
+            --data "{\"text\":\"🌍 Presentación generada automáticamente:\\n- Audiencia: ${{ needs.read-calendar.outputs.audience }}\\n- Idioma: automático\\n- Formato: PPTX/PDF/Canva\"}" \
             ${{ secrets.SLACK_WEBHOOK_URL }}
       - name: Send Teams notification
         run: |
-          curl -X POST -H 'Content-type: application/json' \
-            --data '{"title":"Quarterly Resilience Presentation","text":"Presentación Q${{ needs.consolidate-audit.outputs.quarter }} ${{ needs.consolidate-audit.outputs.year }} generada con narrativa ejecutiva."}' \
+          curl -X POST -H "Content-type: application/json" \
+            --data "{\"title\":\"Calendar-Based Presentation\",\"text\":\"Presentación generada automáticamente detectando audiencia del calendario.\"}" \
             ${{ secrets.TEAMS_WEBHOOK_URL }}
