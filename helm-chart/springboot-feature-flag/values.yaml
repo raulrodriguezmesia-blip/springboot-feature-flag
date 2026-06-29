@@ -112,6 +112,19 @@ cloudArchive:
   notifySlack: true
   notifyTeams: true
 
+# Quarterly Presentation configuration
+quarterlyPresentation:
+  enabled: true
+  format:
+    - pptx
+    - pdf
+  archive:
+    - onedrive
+    - googleDrive
+  notifySlack: true
+  notifyTeams: true
+  schedule: quarterly
+
 # Resource configuration
 resources:
   requests:

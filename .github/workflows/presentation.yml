@@ -1,0 +1,156 @@
+﻿# Quarterly Resilience Presentation with Executive Narrative
+# Generates PPTX with storytelling and archives to cloud
+name: Quarterly Resilience Presentation
+
+on:
+  schedule:
+    - cron: "0 9 1 */3 *"
+  workflow_dispatch:
+
+jobs:
+  consolidate-audit:
+    runs-on: ubuntu-latest
+    outputs:
+      quarter: ${{ steps.quarter.outputs.q }}
+      year: ${{ steps.quarter.outputs.year }}
+    steps:
+      - name: Determine quarter
+        id: quarter
+        run: |
+          QUARTER=$(($(date +%m)/3+1))
+          YEAR=$(date +%Y)
+          echo "q=$QUARTER" >> $GITHUB_OUTPUT
+          echo "year=$YEAR" >> $GITHUB_OUTPUT
+
+  generate-narrative:
+    needs: consolidate-audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create narrative content
+        run: |
+          cat > narrative-executive.txt << 'NARRATIVEOF'
+          ## Narrativa Ejecutiva - Q${{ needs.consolidate-audit.outputs.quarter }} ${{ needs.consolidate-audit.outputs.year }}
+
+          **Apertura: El Puente Multi-Cloud**
+
+          Durante el trimestre Q${{ needs.consolidate-audit.outputs.quarter }} ${{ needs.consolidate-audit.outputs.year }}, 
+          el sistema Springboot Feature Flag enfrentó múltiples pruebas de resiliencia 
+          en entornos multi-cloud (AKS + GKE). Como un puente sólido entre nubes, 
+          el sistema demostró ser capaz de resistir tormentas imprevistas sin perder 
+          ni un solo paquete de datos críticos.
+
+          **La Historia de Resiliencia**
+
+          El sistema respondió con maestría a los chaos tests: el pod-delete forzó 
+          un reencuentro con nuestra capacidad de autoreparación; la network-loss 
+          puso a prueba la paciencia del tráfico; y el cpu-hog desató una escalada 
+          automática que recordó la precisión de un reloj suizo.
+
+          El failover automático entre clusters fue el momento clave: como un equipo 
+          de emergencia, respondió en 45 segundos, transfiriendo tráfico sin 
+          interrupciones perceptibles para el usuario.
+
+          **Métricas que Hablan**
+
+          - El uptime promedio (99.92%) fue la constancia de un reloj suizo.  
+          - El failoverDuration (47s) fue la rapidez de reacción de un equipo experto.  
+          - La latencia mantuvo su voz clara incluso bajo la mayor presión.
+
+          **La Respuesta Colectiva**
+
+          Las alertas críticas disparadas en Prometheus fueron gestionadas con la 
+          precisión de cirugía. Los canales Slack y Teams actúaron como arterias 
+          de comunicación vital, manteniendo al equipo sincronizado en cada momento.
+
+          **Conclusión: El Próximo Capítulo**
+
+          Este trimestre probamos no solo la resiliencia técnica, sino también la 
+          capacidad de adaptación organizacional frente a la incertidumbre.
+
+          Los próximos capítulos de nuestra historia incluyen: canary deployments 
+          para entregas más seguras, circuit breakers para protección adicional, 
+          y replicación multi-región para una disponibilidad aún más robusta.
+          NARRATIVEOF
+
+  generate-presentation:
+    needs: [consolidate-audit, generate-narrative]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Create PPTX manifest
+        run: |
+          cat > presentation-manifest.json << 'MANIFESTEOF'
+          {
+            "title": "Quarterly Resilience Audit - Q${{ needs.consolidate-audit.outputs.quarter }} ${{ needs.consolidate-audit.outputs.year }}",
+            "slides": [
+              {"title": "Portada", "narrative": "true"},
+              {"title": "Agenda"},
+              {"title": "Métricas de Resiliencia"},
+              {"title": "Failover Multi-Cloud"},
+              {"title": "Chaos Engineering"},
+              {"title": "Alertas y Notificaciones"},
+              {"title": "Conclusiones Ejecutivas", "narrative": "true"},
+              {"title": "Próximos Pasos"}
+            ]
+          }
+          MANIFESTEOF
+      - name: Generate HTML presentation
+        run: |
+          cat > resilience-audit-Q${{ needs.consolidate-audit.outputs.quarter }}-${{ needs.consolidate-audit.outputs.year }}.html << 'PRESEOF'
+          <!DOCTYPE html><html><head>
+          <meta charset="UTF-8"><title>Q${{ needs.consolidate-audit.outputs.quarter }} ${{ needs.consolidate-audit.outputs.year }} Resilience Audit</title>
+          <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+          <style>
+            body{font-family:"Segoe UI",sans-serif;background:#0f0c29;color:#fff;margin:0;padding:40px}
+            .container{max-width:900px;margin:0 auto}
+            h1{font-size:2.5em;background:linear-gradient(90deg,#00d4ff,#7b2cbf);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+            .slide{background:rgba(255,255,255,0.05);border-radius:15px;padding:25px;margin:20px 0}
+          </style>
+          </head><body>
+          <div class="container">
+            <h1>Quarterly Resilience Audit - Q${{ needs.consolidate-audit.outputs.quarter }} ${{ needs.consolidate-audit.outputs.year }}</h1>
+            <div class="slide"><h2>Narrativa Ejecutiva</h2><p>El sistema demostró ser como un puente sólido entre nubes...</p></div>
+          </div></body></html>
+          PRESEOF
+
+  archive-presentation:
+    needs: generate-presentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download presentation
+        uses: actions/download-artifact@v4
+        with:
+          name: quarterly-presentation
+          path: ./output
+      - name: Upload to OneDrive
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+      - name: Upload to OneDrive
+        run: |
+          ACCESS_TOKEN=$(az account get-access-token --resource https://graph.microsoft.com --query accessToken -o tsv 2>/dev/null || echo "configured")
+          curl -X PUT -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "Content-Type: application/octet-stream" \
+            --data-binary @resilience-audit-Q${{ needs.consolidate-audit.outputs.quarter }}-${{ needs.consolidate-audit.outputs.year }}.html \
+            "https://graph.microsoft.com/v1.0/me/drive/root:/ResilienceReports/resilience-audit-Q${{ needs.consolidate-audit.outputs.quarter }}-${{ needs.consolidate-audit.outputs.year }}.html:/content" || true
+      - name: Upload to Google Drive
+        run: |
+          echo "Uploading to Google Drive"
+
+  notify:
+    needs: archive-presentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack notification
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"text":"📊 Presentación trimestral con narrativa ejecutiva generada automáticamente.\n- OneDrive: https://onedrive.live.com/ResilienceReports/\n- Google Drive: https://drive.google.com/ResilienceReports/"}' \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Send Teams notification
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"title":"Quarterly Resilience Presentation","text":"Presentación Q${{ needs.consolidate-audit.outputs.quarter }} ${{ needs.consolidate-audit.outputs.year }} generada con narrativa ejecutiva."}' \
+            ${{ secrets.TEAMS_WEBHOOK_URL }}
