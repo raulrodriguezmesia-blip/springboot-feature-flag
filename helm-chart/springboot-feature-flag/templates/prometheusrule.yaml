@@ -1,0 +1,52 @@
+﻿{{- if .Values.alerts.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "springboot-feature-flag.fullname" . }}-alerts
+  labels:
+    {{- include "springboot-feature-flag.labels" . | nindent 4 }}
+    severity: {{ .Values.alerts.severity | default "critical" }}
+spec:
+  groups:
+    - name: springboot-feature-flag.rules
+      rules:
+        # High CPU Usage Alert
+        - alert: HighCPUUsage
+          expr: sum(rate(container_cpu_usage_seconds_total{pod=~"springboot-feature-flag.*"}[2m])) > 0.8
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "CPU usage > 80%"
+            description: "Spring Boot Feature Flag está usando más del 80% de CPU"
+        
+        # High Memory Usage Alert
+        - alert: HighMemoryUsage
+          expr: sum(container_memory_usage_bytes{pod=~"springboot-feature-flag.*"}) > 800000000
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Memory usage > 800Mi"
+            description: "Spring Boot Feature Flag está usando demasiada memoria"
+        
+        # Feature Flag Disabled Alert
+        - alert: FeatureFlagDisabled
+          expr: springboot_feature_flag_enabled == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Feature Flag crítico deshabilitado"
+            description: "El flag principal está desactivado"
+        
+        # Application Down Alert
+        - alert: ApplicationDown
+          expr: up{job="springboot-feature-flag"} == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Application down"
+            description: "Spring Boot Feature Flag no responde"
+{{- end }}

@@ -1,0 +1,214 @@
+﻿{
+  "dashboard": {
+    "id": null,
+    "title": "Spring Boot Feature Flag - Alert Status",
+    "tags": ["spring-boot", "feature-flag", "alerts", "observability"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "type": "stat",
+        "title": "Service Status",
+        "gridPos": {"h": 4, "w": 4, "x": 0, "y": 0},
+        "datasource": "Prometheus",
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"type": 1, "options": {"match": {"id": 0, "value": "null"}, "result": {"text": "DOWN", "color": "red"}}
+            ],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "green", "value": 1}
+              ]
+            },
+            "unit": "none"
+          }
+        },
+        "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto"},
+        "targets": [
+          {
+            "expr": "up{job=\"springboot-feature-flag\"}",
+            "format": "table",
+            "instant": true
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "type": "gauge",
+        "title": "CPU Usage",
+        "gridPos": {"h": 4, "w": 4, "x": 4, "y": 0},
+        "datasource": "Prometheus",
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 1,
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 0.6},
+                {"color": "red", "value": 0.8}
+              ]
+            }
+          }
+        },
+        "options": {"reduceOptions": {"values": false, "calcs": ["lastNotNull"]}},
+        "targets": [
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total{pod=~\"springboot-feature-flag.*\"}[2m]))"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "type": "gauge",
+        "title": "Memory Usage",
+        "gridPos": {"h": 4, "w": 4, "x": 8, "y": 0},
+        "datasource": "Prometheus",
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 1000,
+            "unit": "MiByte",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 500},
+                {"color": "red", "value": 800}
+              ]
+            }
+          }
+        },
+        "options": {"reduceOptions": {"values": false, "calcs": ["lastNotNull"]}},
+        "targets": [
+          {
+            "expr": "sum(container_memory_usage_bytes{pod=~\"springboot-feature-flag.*\"}) / 1000000"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "type": "stat",
+        "title": "HTTP Latency (ms)",
+        "gridPos": {"h": 4, "w": 4, "x": 12, "y": 0},
+        "datasource": "Prometheus",
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 200},
+                {"color": "red", "value": 500}
+              ]
+            }
+          }
+        },
+        "options": {"colorMode": "value"},
+        "targets": [
+          {
+            "expr": "sum(http_server_requests_seconds_sum{uri!~\"/actuator.*\"}) / sum(http_server_requests_seconds_count{uri!~\"/actuator.*\"}) * 1000",
+            "format": "table"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "type": "table",
+        "title": "Feature Flags Status",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "datasource": "Prometheus",
+        "fieldConfig": {
+          "defaults": {
+            "custom": {},
+            "mappings": [
+              {"type": 1, "options": {"match": {"id": 0, "value": "1"}, "result": {"text": "true", "color": "green"}},
+              {"type": 1, "options": {"match": {"id": 0, "value": "0"}, "result": {"text": "false", "color": "red"}}
+            ]
+          }
+        },
+        "options": {"showHeader": true},
+        "targets": [
+          {
+            "expr": "springboot_feature_flag_enabled{job=\"springboot-feature-flag\"}",
+            "format": "table",
+            "instant": true
+          },
+          {
+            "expr": "springboot_feature_flag_experimental{job=\"springboot-feature-flag\"}",
+            "format": "table",
+            "instant": true
+          },
+          {
+            "expr": "springboot_feature_flag_beta{job=\"springboot-feature-flag\"}",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "index": "metric",
+              "renameByName": {
+                "Metric name": "Feature Flag",
+                "Value": "Status"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "type": "logs",
+        "title": "Error Logs",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "datasource": "Loki",
+        "options": {
+          "dedupStrategy": "none",
+          "enableLogQL": true,
+          "wrapLogMessage": true
+        },
+        "targets": [
+          {
+            "expr": "{app=\"springboot-feature-flag\",level=~\"ERROR|WARN\"}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {}
+          }
+        }
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "namespace",
+          "type": "textbox",
+          "label": "Namespace",
+          "default": "production",
+          "description": "Kubernetes namespace for the application"
+        },
+        {
+          "name": "pod",
+          "type": "textbox",
+          "label": "Pod",
+          "default": "springboot-feature-flag",
+          "description": "Pod name pattern for the application"
+        }
+      ]
+    }
+  }
+}

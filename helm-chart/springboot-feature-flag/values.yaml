@@ -44,6 +44,13 @@ loki:
   enabled: true
   datasource: loki
 
+# Alerts configuration
+alerts:
+  enabled: true
+  severity: critical
+  slack: true
+  teams: false
+
 # Resource configuration
 resources:
   requests:
