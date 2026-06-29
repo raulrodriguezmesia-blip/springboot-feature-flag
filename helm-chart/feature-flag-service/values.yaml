@@ -1,12 +1,11 @@
-replicaCount: 1
+﻿replicaCount: 1
 
 image:
   repository: your-docker-registry/feature-flag-service
   pullPolicy: IfNotPresent
-  tag: "0.0.1"
+  tag: "latest"
 
 service:
-  # We'll set the port in the service section
   type: ClusterIP
   port: 8080
 
@@ -18,33 +17,15 @@ resources:
     cpu: 250m
     memory: 256Mi
 
-# Environment variables for the application
 env:
   - name: SPRING_PROFILES_ACTIVE
-    value: prod
+    value: "prod"
   - name: SPRING_DATASOURCE_URL
     value: "jdbc:postgresql://postgres-service:5432/featureflags"
-  - name: SPRING_DATASOURCE_USERNAME
-    valueFrom:
-      secretKeyRef:
-        name: db-secret
-        key: username
-  - name: SPRING_DATASOURCE_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: db-secret
-        key: password
   - name: SPRING_REDIS_HOST
     value: "redis-service"
-  - name: SPRING_REDIS_PORT
-    value: "6379"
   - name: APP_JWTSECRET
     valueFrom:
       secretKeyRef:
         name: jwt-secret
         key: secret
-
-# Redis and PostgreSQL are expected to be installed separately or as subcharts
-# For simplicity, we assume they are available in the cluster
-
-# ServiceAccount, RBAC, etc. are not needed for this simple service
