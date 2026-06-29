@@ -1,0 +1,20 @@
+﻿groups:
+  - name: report-verification-alerts
+    rules:
+      - alert: HighReportRejectionRate
+        expr: (reports_rejected_total / ignoring (status) (reports_verified_total)) * 100 > 20
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High rejection rate detected"
+          description: "Report rejection rate is above 20% in the last 5 minutes. Action required: check signatures and hashes."
+      
+      - alert: MediumReportRejectionRate
+        expr: (reports_rejected_total / ignoring (status) (reports_verified_total)) * 100 > 10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Medium rejection rate detected"
+          description: "Report rejection rate is above 10% in the last 10 minutes. Review in progress."

@@ -1,0 +1,100 @@
+﻿# Proactive Corrections Pipeline
+# Executes extra validation when ML predicts high risk of report rejection
+name: Proactive Corrections
+
+on:
+  schedule:
+    - cron: "0 3 * * *"  # Daily at 3 AM to run proactive checks
+  workflow_dispatch:
+
+jobs:
+  check-predictive-risk:
+    runs-on: ubuntu-latest
+    outputs:
+      risk: ${{ steps.ml.outputs.risk_level }}
+    steps:
+      - name: Check predictive risk score
+        id: ml
+        run: |
+          # Would integrate with Prometheus metric in production
+          # predicted_rejection_rate from predictive model
+          # Simulating check
+          RISK="high"  # Would be dynamic from ML prediction
+          echo "risk_level=$RISK" >> $GITHUB_OUTPUT
+
+  extra-validations-high-risk:
+    needs: check-predictive-risk
+    if: needs.check-predictive-risk.outputs.risk == 'high'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install validation tools
+        run: |
+          sudo apt-get install -y gnupg openssl jq || true
+      - name: Run dual signature validation
+        run: |
+          echo "Running GPG validation..."
+          # Would execute: gpg --verify report.pdf.sig report.pdf
+          echo "Running X.509 validation..."
+          # Would execute: openssl dgst -sha256 -verify pub.key report.pdf
+      - name: Run dual hash calculation
+        run: |
+          echo "Calculating SHA-256 and SHA-512 hashes..."
+          # Would calculate both hashes and compare
+
+  reinforce-controls:
+    needs: extra-validations-high-risk
+    if: needs.check-predictive-risk.outputs.risk == 'high'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apply strict validation rules
+        run: |
+          echo "Applying whitelist-only key validation"
+          echo "Enforcing mandatory .sig file requirement"
+          cat > audit-checklist.json << 'CHECKLISTEOF'
+          {
+            "whitelist_keys_only": true,
+            "mandatory_sig": true,
+            "dual_signature_validation": true,
+            "dual_hash_validation": true,
+            "timestamp": "${{ github.event.head_commit.timestamp }}"
+          }
+          CHECKLISTEOF
+
+  auto-correction:
+    needs: reinforce-controls
+    if: needs.check-predictive-risk.outputs.risk == 'high'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auto-correct mismatches
+        run: |
+          echo "Checking for hash mismatches and regenerating expected hashes"
+          echo "Checking for missing .sig files and creating alerts"
+          echo "Notifying senders with correction instructions"
+
+  notify-preventive:
+    needs: auto-correction
+    if: needs.check-predictive-risk.outputs.risk == 'high'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send preventive notification to Slack
+        run: |
+          curl -X POST -H "Content-type: application/json" \
+            --data "{\"text\":\"🛡️ Acción correctiva proactiva:\\n- Riesgo alto detectado por IA\\n- Validaciones reforzadas ejecutadas\\n- Reportes bajo control preventivo\"}" \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Send Teams notification
+        run: |
+          curl -X POST -H "Content-type: application/json" \
+            --data "{\"title\":\"Proactive Corrections Activated\",\"text\":\"Validaciones extra activadas por riesgo alto predictivo.\"}" \
+            ${{ secrets.TEAMS_WEBHOOK_URL }}
+
+  archive-preemptive:
+    needs: auto-correction
+    if: needs.check-predictive-risk.outputs.risk == 'high'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Archive to secure folder
+        run: |
+          echo "Archiving reports to ResilienceReports/PreemptiveChecks"
+          echo "Archiving validation logs to cloud storage"

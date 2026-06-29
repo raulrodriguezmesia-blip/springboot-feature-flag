@@ -200,6 +200,17 @@ verificationPipeline:
   notifySlack: true
   notifyTeams: true
 
+# Rejection Alerts configuration
+rejectionAlerts:
+  enabled: true
+  threshold: 20
+  notifySlack: true
+  notifyTeams: true
+  notifyEmail: true
+  severityLevels:
+    warning: 10
+    critical: 20
+
 # Rejection Feedback configuration
 rejectionFeedback:
   enabled: true
@@ -219,6 +230,34 @@ retrySystem:
   notifySlack: true
   notifyTeams: true
   notifySender: true
+
+# Predictive Alerts configuration
+predictiveAlerts:
+  enabled: true
+  model: lstm
+  predictionWindow: 7d
+  thresholds:
+    low: "<10"
+    medium: "10-20"
+    high: ">20"
+  notifySlack: true
+  notifyTeams: true
+  archivePredictions: true
+
+# Proactive Corrections configuration
+proactiveCorrections:
+  enabled: true
+  triggerRiskLevel: high
+  extraValidations:
+    - gpg
+    - x509
+    - sha256
+    - sha512
+  whitelistKeys: true
+  archivePreemptive: true
+  auditLog: true
+  notifySlack: true
+  notifyTeams: true
 
 # Resource configuration
 resources:
