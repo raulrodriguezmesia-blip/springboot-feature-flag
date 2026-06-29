@@ -1,4 +1,5 @@
 ﻿# CI - Spring Boot Feature Flag
+# Pipeline de CI/CD con Maven y Docker Hub
 name: CI - Spring Boot Feature Flag
 
 # Eventos que disparan el workflow
@@ -36,23 +37,68 @@ jobs:
       
       # 4. Compilar el proyecto
       - name: Build with Maven
-        run: mvn clean install
+        run: mvn clean install -DskipTests
       
       # 5. Ejecutar tests
       - name: Run tests
         run: mvn test
       
-      # 6. Mostrar resultados de tests
-      - name: Show test results
-        if: always()
-        run: |
-          echo "Test execution completed"
-      
-      # 7. Subir artefacto JAR generado
+      # 6. Subir artefacto JAR generado
       - name: Upload JAR artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         if: success()
         with:
-          name: feature-flag-service-jar
+          name: springboot-feature-flag
           path: target/*.jar
+      
+      # 7. Subir resultados de tests (JUnit XML)
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results
+          path: target/surefire-reports/*.xml
           if-no-files-found: warn
+
+  docker-build-and-push:
+    # Depende del job anterior
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+      # 1. Checkout del repositorio
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      # 2. Configurar Docker
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+      
+      # 3. Login en Docker Hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      # 4. Preparar tags
+      - name: Set image tags
+        id: meta
+        run: |
+          IMAGE_NAME=raulrodriguezmesia/springboot-feature-flag
+          COMMIT_SHA=${GITHUB_SHA::8}
+          echo "image=${IMAGE_NAME}" >> $GITHUB_OUTPUT
+          echo "tag=${COMMIT_SHA}" >> $GITHUB_OUTPUT
+      
+      # 5. Construir y push imagen Docker
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image }}:latest
+            ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
