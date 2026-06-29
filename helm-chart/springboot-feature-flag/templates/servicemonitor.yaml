@@ -1,0 +1,20 @@
+﻿{{- if .Values.observability.prometheus }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "springboot-feature-flag.fullname" . }}-monitor
+  labels:
+    {{- include "springboot-feature-flag.labels" . | nindent 4 }}
+    release: prometheus  # Label para que Prometheus lo descubra
+spec:
+  selector:
+    matchLabels:
+      app: springboot-feature-flag
+  namespaceSelector:
+    matchNames:
+      - {{ .Values.service.namespace | default "production" }}
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 15s
+      scrapeTimeout: 10s

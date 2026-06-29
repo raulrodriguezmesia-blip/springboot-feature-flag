@@ -79,6 +79,12 @@ jobs:
           echo "Deployment failed, rolling back to previous revision..."
           helm rollback springboot-feature-flag 0 --namespace production
         continue-on-error: true
+      - name: Verify ServiceMonitor
+        run: |
+          kubectl get servicemonitor -n production -o name || echo "No ServiceMonitor found"
+      - name: Check monitoring stack
+        run: |
+          kubectl get pods -n monitoring --field-selector=status.phase=Running -o name | head -5 || echo "Monitoring namespace not ready"
       - name: Health check
         run: |
           echo "Deployment completed - validate endpoint at https://${{ secrets.INGRESS_HOST }}/actuator/health"

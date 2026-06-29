@@ -14,6 +14,7 @@ replicaCount: 2
 service:
   type: ClusterIP
   port: 8080
+  namespace: production
 
 # Ingress configuration
 ingress:
@@ -25,11 +26,23 @@ ingress:
     secretName: springboot-feature-flag-tls
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 
 # Cert-manager configuration
 certManager:
   enabled: true
   clusterIssuer: letsencrypt-prod
+
+# Observability configuration
+observability:
+  prometheus: true
+  grafana: true
+  loki: true
+
+# Loki configuration
+loki:
+  enabled: true
+  datasource: loki
 
 # Resource configuration
 resources:

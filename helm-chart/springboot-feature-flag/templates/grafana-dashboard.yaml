@@ -1,0 +1,90 @@
+﻿{{- if .Values.observability.grafana }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "springboot-feature-flag.fullname" . }}-grafana-dashboard
+  labels:
+    {{- include "springboot-feature-flag.labels" . | nindent 4 }}
+    grafana-dashboard: "1"
+data:
+  springboot-dashboard.json: |
+    {
+      "annotations": { "list": [ { "builtIn": 1, "datasource": "-- Grafana --", "enable": true, "hide": true, "iconColor": "rgba(245, 247, 250, 1)", "name": "Annotations & Alerts", "type": "dashboard" } ] },
+      "editable": true,
+      "gnetId": null,
+      "graphTooltip": 0,
+      "links": [],
+      "panels": [
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": { "defaults": { "unit": "ms" } },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "id": 1,
+          "options": {},
+          "targets": [
+            {
+              "expr": "rate(http_server_requests_seconds_sum{application=\"springboot-feature-flag\", uri!~\"/actuator.*\"}[5m]) / rate(http_server_requests_seconds_count{application=\"springboot-feature-flag\", uri!~\"/actuator.*\"}[5m])",
+              "legendFormat": "{{method}} {{uri}}",
+              "refId": "A"
+            }
+          ],
+          "title": "HTTP Request Duration (avg)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": { "defaults": { "unit": "percentunit" } },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "id": 2,
+          "options": {},
+          "targets": [
+            {
+              "expr": "jvm_memory_used_bytes{application=\"springboot-feature-flag\"} / jvm_memory_max_bytes{application=\"springboot-feature-flag\"}",
+              "legendFormat": "{{area}} {{id}}",
+              "refId": "A"
+            }
+          ],
+          "title": "JVM Memory Usage",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": { "defaults": { "unit": "percentunit" } },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "id": 3,
+          "options": {},
+          "targets": [
+            {
+              "expr": "rate(jvm_cpu_used_bytes{application=\"springboot-feature-flag\"}[5m])",
+              "legendFormat": "CPU Usage",
+              "refId": "A"
+            }
+          ],
+          "title": "CPU Usage",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Loki",
+          "fieldConfig": { "defaults": { "custom": {} } },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "id": 4,
+          "options": {},
+          "targets": [
+            {
+              "expr": "{app=\"springboot-feature-flag\"} |= \"ERROR\" or {app=\"springboot-feature-flag\"} |= \"WARN\"",
+              "refId": "A"
+            }
+          ],
+          "title": "Application Logs (Errors/Warnings)",
+          "type": "logs"
+        }
+      ],
+      "schemaVersion": 30,
+      "tags": ["spring-boot", "java", "feature-flag"],
+      "templating": { "list": [] },
+      "time": { "from": "now-6h", "to": "now" },
+      "timezone": "",
+      "title": "Spring Boot Feature Flag - Observability",
+      "version": 1
+    }
+{{- end }}
