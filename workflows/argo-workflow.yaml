@@ -1,0 +1,117 @@
+﻿apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: corrective-report-pipeline
+  namespace: reporting
+spec:
+  entrypoint: main
+  arguments:
+    parameters:
+      - name: quarter
+        value: "2"
+      - name: year
+        value: "2026"
+  
+  volumes:
+    - name: shared-data
+      emptyDir: {}
+
+  templates:
+    - name: main
+      steps:
+        - - name: generate-report
+            template: generate
+        - - name: validate-report
+            template: validate
+        - - name: distribute-report
+            template: distribute
+        - - name: traceability
+            template: trace
+        - - name: grafana-dashboard
+            template: dashboard
+        - - name: alerts
+            template: promote-alerts
+        - - name: corrective-actions
+            template: correct
+        - - name: backup
+            template: backup
+
+    - name: generate
+      container:
+        image: pandoc/core:3.2
+        command: [sh, -c]
+        args:
+          - echo "Generating PDF report with Pandoc for Q{{workflow.parameters.quarter}} {{workflow.parameters.year}}"
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data
+
+    - name: validate
+      container:
+        image: alpine/gnupg:3.9
+        command: [sh, -c]
+        args:
+          - echo "Validating digital signatures with GPG"
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data
+
+    - name: distribute
+      container:
+        image: python:3.9-slim
+        command: [sh, -c]
+        args:
+          - echo "Sending reports via email SMTP"
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data
+
+    - name: trace
+      container:
+        image: node:16-alpine
+        command: [sh, -c]
+        args:
+          - echo "Tracking email opens via Graph/Gmail API"
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data
+
+    - name: dashboard
+      container:
+        image: grafana/grafana:10.2.0
+        command: [sh, -c]
+        args:
+          - echo "Importing retry-dashboard.json to Grafana"
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data
+
+    - name: promote-alerts
+      container:
+        image: prom/prometheus:v2.45.0
+        command: [sh, -c]
+        args:
+          - echo "Checking alert rules and activating if needed"
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data
+
+    - name: correct
+      container:
+        image: python:3.9-slim
+        command: [sh, -c]
+        args:
+          - echo "Executing corrective actions for rejected reports"
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data
+
+    - name: backup
+      container:
+        image: rclone/rclone:1.64
+        command: [sh, -c]
+        args:
+          - echo "Syncing backups to AWS S3 and Azure Blob Storage"
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data

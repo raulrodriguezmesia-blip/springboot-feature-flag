@@ -1,0 +1,65 @@
+﻿{
+  "dashboard": {
+    "id": null,
+    "title": "Retry Analytics Dashboard",
+    "tags": ["retry", "analytics", "verification", "audit"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "30s",
+    "templating": {
+      "list": [
+        {
+          "name": "timeRange",
+          "type": "custom",
+          "label": "Time Range",
+          "query": "7d,30d,90d",
+          "default": "90d",
+          "description": "Select time range for retry analytics"
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "type": "barchart",
+        "title": "Reports Verified on First Attempt",
+        "gridPos": {"h": 6, "w": 6, "x": 0, "y": 0},
+        "datasource": "Prometheus",
+        "targets": [
+          {"expr": "reports_verified_first_attempt", "legendFormat": "First Attempt"}
+        ]
+      },
+      {
+        "id": 2,
+        "type": "barchart",
+        "title": "Reports Verified After Retry",
+        "gridPos": {"h": 6, "w": 6, "x": 6, "y": 0},
+        "datasource": "Prometheus",
+        "targets": [
+          {"expr": "reports_verified_after_retry", "legendFormat": "After Retry"}
+        ]
+      },
+      {
+        "id": 3,
+        "type": "piechart",
+        "title": "Final Rejections Distribution",
+        "gridPos": {"h": 6, "w": 6, "x": 12, "y": 0},
+        "datasource": "Prometheus",
+        "targets": [
+          {"expr": "reports_rejected_final", "legendFormat": "Rejected"}
+        ]
+      },
+      {
+        "id": 4,
+        "type": "timeseries",
+        "title": "Retry Attempts Over Time",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 6},
+        "datasource": "Prometheus",
+        "targets": [
+          {"expr": "retry_attempts_total", "legendFormat": "Total Retries"}
+        ]
+      }
+    ]
+  }
+}

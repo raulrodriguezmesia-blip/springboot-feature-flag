@@ -29,12 +29,14 @@ distributionTraceability:
   trackOpen: true
   trackDownload: true
   archiveLogs: true
-  notifySlack: true
-  notifyTeams: true
 
-impactAnalytics:
+impactMetrics:
   enabled: true
-  calendarIntegration: true
-  correlateCEO: true
-  correlateRecruiters: true
-  dashboard: true
+  correlateCalendar: true
+  correlateRecruitment: true
+
+orchestration:
+  enabled: true
+  workflowEngine: argo
+  backupProviders: [awsS3, azureBlob]
+  autoScaling: true
