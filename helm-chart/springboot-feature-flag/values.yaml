@@ -15,17 +15,16 @@ service:
   type: ClusterIP
   port: 8080
 
-# Ingress configuration (optional)
+# Ingress configuration
 ingress:
-  enabled: false
+  enabled: true
   className: nginx
+  host: featureflags.example.com
+  tls:
+    enabled: true
+    secretName: springboot-feature-flag-tls
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-  hosts:
-    - host: feature-flag.example.com
-      paths:
-        - path: /
-          pathType: Prefix
 
 # Resource configuration
 resources:
@@ -35,6 +34,14 @@ resources:
   limits:
     cpu: 500m
     memory: 1Gi
+
+# ConfigMap configuration
+config:
+  enabled: true
+
+# Secret configuration  
+secret:
+  enabled: true
 
 # Node selector for scheduling
 nodeSelector: {}

@@ -2,28 +2,31 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "springboot-feature-flag.fullname" . }}
+  name: {{ include "springboot-feature-flag.fullname" . }}-ingress
   labels:
     {{- include "springboot-feature-flag.labels" . | nindent 4 }}
   annotations:
-    {{- range ,  := .Values.ingress.annotations }}
-    {{  }}: {{  | quote }}
-    {{- end }}
+    # NGINX Ingress Controller
+    kubernetes.io/ingress.class: {{ .Values.ingress.className | quote }}
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    # Cert-manager annotations (uncomment to enable automatic TLS)
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
-  ingressClassName: {{ .Values.ingress.className }}
   rules:
-    {{- range .Values.ingress.hosts }}
-    - host: {{ .host }}
+    - host: {{ .Values.ingress.host | quote }}
       http:
         paths:
-          {{- range .paths }}
-          - path: {{ .path }}
-            pathType: {{ .pathType }}
+          - path: /
+            pathType: Prefix
             backend:
               service:
-                name: {{ include "springboot-feature-flag.fullname" $ }}
+                name: {{ include "springboot-feature-flag.fullname" . }}
                 port:
-                  number: {{ $.Values.service.port }}
-          {{- end }}
-    {{- end }}
+                  number: {{ .Values.service.port }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host | quote }}
+      secretName: {{ .Values.ingress.tls.secretName | quote }}
+  {{- end }}
 {{- end }}
