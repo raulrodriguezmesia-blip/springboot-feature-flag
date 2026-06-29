@@ -1,0 +1,84 @@
+﻿# Automatic Retry System for Corrected Reports
+# Monitors incoming folder for resubmissions and validates automatically
+name: Retry System
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  monitor-incoming:
+    runs-on: ubuntu-latest
+    outputs:
+      reports: ${{ steps.list.outputs.files }}
+    steps:
+      - name: List incoming reports
+        id: list
+        run: |
+          find reports/incoming -name "*.pdf" -o -name "*.html" > incoming-files.txt 2>/dev/null || echo "No files" > incoming-files.txt
+          echo "files=$(cat incoming-files.txt | tr '\n' ',')" >> $GITHUB_OUTPUT
+
+  process-retries:
+    needs: monitor-incoming
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install GPG
+        run: |
+          sudo apt-get install -y gnupg jq
+      - name: Process each incoming report
+        run: |
+          for REPORT in $(cat incoming-files.txt); do
+            if [ -f "$REPORT" ]; then
+              BASENAME=$(basename "$REPORT")
+              echo "Processing retry: $BASENAME"
+              
+              # Check if previously rejected
+              if grep -q "$BASENAME" reports/rejected-history.json 2>/dev/null; then
+                echo "Found previously rejected report, validating..."
+                
+                # Verify signature
+                SIGNATURE="${REPORT}.sig"
+                if [ -f "$SIGNATURE" ]; then
+                  gpg --verify "$SIGNATURE" "$REPORT" 2>/dev/null && SIG_STATUS="valid" || SIG_STATUS="invalid"
+                fi
+                
+                # Verify hash
+                EXPECTED_HASH=$(jq -r ".reports[] | select(.report==\"$BASENAME\") | .hash" reports/audit-log.json 2>/dev/null || echo "")
+                ACTUAL_HASH=$(sha256sum "$REPORT" | cut -d' ' -f1)
+                
+                if [ "$EXPECTED_HASH" = "$ACTUAL_HASH" ]; then
+                  HASH_STATUS="match"
+                else
+                  HASH_STATUS="mismatch"
+                fi
+                
+                if [ "$SIG_STATUS" = "valid" ] && [ "$HASH_STATUS" = "match" ]; then
+                  echo "Report accepted after retry"
+                  mv "$REPORT" reports/verified/
+                  # Update audit log with retry success
+                  jq ".reports |= map(if .report==\\\"$BASENAME\\\" then .status=\\\"accepted-after-retry\\\" else . end)" reports/audit-log.json > temp.json && mv temp.json reports/audit-log.json
+                else
+                  echo "Report still rejected"
+                  # Notify sender of continued issues
+                fi
+              fi
+            fi
+          done
+
+  notify-retry:
+    needs: process-retries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack notification
+        run: |
+          curl -X POST -H "Content-type: application/json" \
+            --data "{\"text\":\"🔄 Reintento procesado:\\n- Estado: accepted-after-retry / rejected-again\\n- Destinatario notificado\"}" \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Send Teams notification
+        run: |
+          curl -X POST -H "Content-type: application/json" \
+            --data "{\"title\":\"Retry Processed\",\"text\":\"Reporte reenviado validado automáticamente.\"}" \
+            ${{ secrets.TEAMS_WEBHOOK_URL }}

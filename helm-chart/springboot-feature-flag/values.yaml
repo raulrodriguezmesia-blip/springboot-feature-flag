@@ -179,6 +179,47 @@ emailDistribution:
   notifyTeams: true
   schedule: quarterly
 
+# Digital Signature configuration
+digitalSignature:
+  enabled: true
+  algorithm: sha256
+  provider: gpg
+  archiveSignedReports: true
+  auditLog: true
+  notifySlack: true
+  notifyTeams: true
+
+# Verification Pipeline configuration
+verificationPipeline:
+  enabled: true
+  signatureProvider: gpg
+  hashAlgorithm: sha256
+  archiveAccepted: true
+  archiveRejected: true
+  auditLog: true
+  notifySlack: true
+  notifyTeams: true
+
+# Rejection Feedback configuration
+rejectionFeedback:
+  enabled: true
+  notifySender: true
+  archiveRejected: true
+  auditLog: true
+  notifySlack: true
+  notifyTeams: true
+
+# Retry System configuration
+retrySystem:
+  enabled: true
+  monitorFolder: ResilienceReports/Incoming
+  archiveAccepted: true
+  archiveRejected: true
+  auditLog: true
+  notifySlack: true
+  notifyTeams: true
+  notifySender: true
+
 # Resource configuration
 resources:
   requests:

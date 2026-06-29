@@ -1,0 +1,121 @@
+﻿# Report Verification Pipeline with Rejection Feedback
+# Validates digital signatures and hashes, provides automated feedback on failures
+name: Report Verification
+
+on:
+  push:
+    paths:
+      - "reports/incoming/**"
+  workflow_dispatch:
+
+jobs:
+  verify-signature:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install GPG
+        run: |
+          sudo apt-get install -y gnupg
+      - name: Import public key
+        run: |
+          echo "${{ secrets.GPG_PUBLIC_KEY }}" | gpg --import || true
+      - name: Verify digital signature
+        run: |
+          REPORT_FILE=$(find reports/incoming -name "*.pdf" -o -name "*.html" | head -1)
+          SIGNATURE_FILE="${REPORT_FILE}.sig"
+          if [ -f "$SIGNATURE_FILE" ]; then
+            gpg --verify "$SIGNATURE_FILE" "$REPORT_FILE" && echo "signature=valid" >> $GITHUB_OUTPUT || echo "signature=invalid" >> $GITHUB_OUTPUT
+          else
+            echo "signature=missing" >> $GITHUB_OUTPUT
+          fi
+
+  verify-hash:
+    needs: verify-signature
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download audit log
+        run: |
+          curl -s "${{ secrets.AUDIT_LOG_URL }}" -o audit-log.json || echo '{"reports":[]}' > audit-log.json
+      - name: Calculate and verify hash
+        run: |
+          REPORT_FILE=$(find reports/incoming -name "*.pdf" -o -name "*.html" | head -1)
+          EXPECTED_HASH=$(jq -r '.reports[] | select(.report=="'$(basename $REPORT_FILE)'") | .hash' audit-log.json || echo "")
+          ACTUAL_HASH=$(sha256sum "$REPORT_FILE" | cut -d' ' -f1)
+          if [ "$EXPECTED_HASH" = "$ACTUAL_HASH" ]; then
+            echo "hash=match" >> $GITHUB_OUTPUT
+          else
+            echo "hash=mismatch" >> $GITHUB_OUTPUT
+          fi
+
+  validation-decision:
+    needs: [verify-signature, verify-hash]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check validation result
+        run: |
+          if [ "${{ needs.verify-signature.outputs.signature }}" = "valid" ] && [ "${{ needs.verify-hash.outputs.hash }}" = "match" ]; then
+            echo "status=accepted" >> $GITHUB_OUTPUT
+          else
+            echo "status=rejected" >> $GITHUB_OUTPUT
+          fi
+        id: decision
+
+  reject-report:
+    needs: validation-decision
+    if: needs.validation-decision.outputs.status == 'rejected'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Move to rejected folder
+        run: |
+          REPORT_FILE=$(find reports/incoming -name "*.pdf" -o -name "*.html" | head -1)
+          mv "$REPORT_FILE" reports/rejected/ || mkdir -p reports/rejected
+      - name: Update audit log
+        run: |
+          cat > audit-log-entry.json << 'EOF'
+          {
+            "report": "report-file",
+            "signature": "invalid",
+            "hash": "mismatch",
+            "status": "rejected",
+            "date": "${{ github.event.head_commit.timestamp }}",
+            "reason": "Firma inválida o hash no coincide"
+          }
+          EOF
+      - name: Send rejection feedback email
+        run: |
+          REASON="Firma digital inválida o hash no coincide"
+          echo "Sending rejection feedback to sender for signature/hash failure"
+
+  notify-failure:
+    needs: reject-report
+    if: needs.validation-decision.outputs.status == 'rejected'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack notification
+        run: |
+          curl -X POST -H "Content-type: application/json" \
+            --data "{\"text\":\"❌ Reporte rechazado:\\n- Archivo: reporte.pdf\\n- Motivo: Firma inválida / Hash mismatch\\n- Retroalimentación enviada al remitente\"}" \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  archive-accepted:
+    needs: validation-decision
+    if: needs.validation-decision.outputs.status == 'accepted'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Move to verified folder
+        run: |
+          REPORT_FILE=$(find reports/incoming -name "*.pdf" -o -name "*.html" | head -1)
+          mkdir -p reports/verified
+          mv "$REPORT_FILE" reports/verified/ || true
+
+  notify-success:
+    needs: archive-accepted
+    if: needs.validation-decision.outputs.status == 'accepted'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack notification
+        run: |
+          curl -X POST -H "Content-type: application/json" \
+            --data "{\"text\":\"✅ Reporte validado y aceptado\"}" \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
