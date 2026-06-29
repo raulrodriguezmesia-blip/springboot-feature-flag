@@ -51,6 +51,14 @@ alerts:
   slack: true
   teams: false
 
+# HPA configuration
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  cpuUtilization: 70
+  memoryUtilization: 80
+
 # Resource configuration
 resources:
   requests:
