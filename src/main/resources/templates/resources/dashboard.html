@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Feature Flag Admin Dashboard</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" />
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+</head>
+<body>
+<div class="container mt-4">
+    <h1>Feature Flag Admin Dashboard</h1>
+
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <h2>Feature Flags</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Key</th>
+                <th>Enabled</th>
+                <th>Description</th>
+                <th>Strategy</th>
+                <th>Rollout %</th>
+                <th>Targeting Rules</th>
+                <th>Expires At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="flag : ${flags}">
+                <td th:text="${flag.key}"></td>
+                <td th:text="${flag.enabled}"></td>
+                <td th:text="${flag.description}"></td>
+                <td th:text="${flag.strategy}"></td>
+                <td th:text="${flag.rolloutPercentage}"></td>
+                <td th:text="${flag.targetingRules}"></td>
+                <td>
+                    <span th:if="${flag.expiresAt == null}">-</span>
+                    <span th:unless="${flag.expiresAt == null}" th:text="${#temporals.format(flag.expiresAt, 'yyyy-MM-dd HH:mm:ss')}"></span>
+                </td>
+                <td>
+                    <form th:action="@{/admin/ui/toggle}" method="post" style="display:inline;">
+                        <input type="hidden" name="key" th:value="${flag.key}" />
+                        <button type="submit" class="btn btn-sm btn-outline-primary"
+                                th:text="${flag.enabled} ? 'Disable' : 'Enable'"></button>
+                    </form>
+                    <form th:action="@{/admin/ui/delete}" method="post" style="display:inline;">
+                        <input type="hidden" name="key" th:value="${flag.key}" />
+                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Delete flag ' + '${flag.key}' + '?')">Delete</button>
+                    </form>
+                    <form th:action="@{/admin/ui/setExpiration}" method="post" style="display:inline;">
+                        <input type="hidden" name="key" th:value="${flag.key}" />
+                        <input type="datetime-local" name="expiresAtStr" 
+                               th:if="${flag.expiresAt != null}" th:value="${#temporals.format(flag.expiresAt, 'yyyy-MM-dd\'T\'HH:mm:ss')}" />
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">Set Expiration</button>
+                    </form>
+                    <form th:action="@{/admin/ui/setStrategy}" method="post" style="display:inline;">
+                        <input type="hidden" name="key" th:value="${flag.key}" />
+                        <select name="strategy">
+                            <option value="">-- Clear Strategy --</option>
+                            <option th:each="s : ${strategies}" 
+                                    th:value="${s.name()}" 
+                                    th:selected="${flag.strategy != null and flag.strategy.name() == s.name()}"> 
+                                    <span th:text="${s.name()}"></span>
+                            </option>
+                        </select>
+                        <input type="number" name="rolloutPercentage" min="0" max="100" 
+                               th:value="${flag.rolloutPercentage}" placeholder="0-100" />
+                        <input type="text" name="targetingRules" 
+                               th:value="${flag.targetingRules}" placeholder="user1,user2 or segment" />
+                        <button type="submit" class="btn btn-sm btn-outline-info">Update Strategy</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr />
+    <p>
+        <a th:href="@{/swagger-ui.html}" class="btn btn-outline-info">View API Documentation (Swagger UI)</a>
+        <a th:href="/actuator/health" class="btn btn-outline-secondary">Health Check</a>
+    </p>
+</div>
+</body>
+</html>

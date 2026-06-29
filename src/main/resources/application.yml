@@ -1,0 +1,80 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: simple
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+    hikari:
+      maximum-pool-size: 10
+  cache:
+    type: simple
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    enable:
+      http: true
+      jvm: true
+      logback: true
+    tags:
+      application: feature-flag-service
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.hibernate: INFO
+
+app:
+  jwtSecret: ${APP_JWTSECRET:yourSecretKeyForJWTGenerationMakeItLongAndSecure1234567890}
+  jwtExpirationMs: 86400000
+  jwtRefreshExpirationMs: 3600000
+  jwtRotationIntervalMs: 3600000
+  featureFlag:
+    cacheTtlSeconds: 300
+    fallbackEnabled: true
+    fallbackDefaultValue: false
+    expirationCheckIntervalMs: 60000
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      externalService:
+        registerHealthIndicator: true
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        recordExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+  retry:
+    instances:
+      externalService:
+        maxAttempts: 3
+        waitDuration: 2s
+  ratelimiter:
+    instances:
+      externalService:
+        limitForPeriod: 10
+        limitRefreshPeriod: 1s
+  bulkhead:
+    instances:
+      externalService:
+        maxConcurrentCalls: 5
+        maxWaitDuration: 1s

@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: feature-flag-service
+  cloud:
+    config:
+      uri: ${CONFIG_SERVER_URL:http://localhost:8888}
+      # If you need to specify a label (branch, tag, commit) for the configuration
+      label: ${CONFIG_LABEL:main}
+      # Enable fail fast if the config server is unavailable
+      fail-fast: true
+      # Retry configuration for connecting to the config server
+      retry:
+        initial-interval: 1000
+        max-interval: 2000
+        multiplier: 1.1
+        max-attempts: 6
+        # If you want to use a custom backoff, you can specify it here
