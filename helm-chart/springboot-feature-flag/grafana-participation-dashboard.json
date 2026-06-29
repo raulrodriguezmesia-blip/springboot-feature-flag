@@ -1,0 +1,81 @@
+﻿{
+  "dashboard": {
+    "id": null,
+    "title": "Participation & Narrative Analytics Dashboard",
+    "tags": ["analytics", "presentations", "audience", "narrative"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "30s",
+    "templating": {
+      "list": [
+        {
+          "name": "timeRange",
+          "type": "custom",
+          "label": "Time Range",
+          "query": "7d,30d,90d,quarter",
+          "default": "quarter"
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "type": "barchart",
+        "title": "Presentations by Audience Type",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 0},
+        "datasource": "Prometheus",
+        "targets": [
+          {"expr": "presentation_count{audienceType=\"CTO\"}", "legendFormat": "CTO"},
+          {"expr": "presentation_count{audienceType=\"CEO\"}", "legendFormat": "CEO"},
+          {"expr": "presentation_count{audienceType=\"Recruiters\"}", "legendFormat": "Recruiters"},
+          {"expr": "presentation_count{audienceType=\"Clientes\"}", "legendFormat": "Clientes"},
+          {"expr": "presentation_count{audienceType=\"Inversionistas\"}", "legendFormat": "Investors"},
+          {"expr": "presentation_count{audienceType=\"EquipoInterno\"}", "legendFormat": "Internal Team"}
+        ]
+      },
+      {
+        "id": 2,
+        "type": "piechart",
+        "title": "Language Distribution",
+        "gridPos": {"h": 6, "w": 6, "x": 12, "y": 0},
+        "datasource": "Prometheus",
+        "targets": [
+          {"expr": "presentation_language_count{language=\"en\"}", "legendFormat": "English"},
+          {"expr": "presentation_language_count{language=\"es\"}", "legendFormat": "Spanish"},
+          {"expr": "presentation_language_count{language=\"bilingual\"}", "legendFormat": "Bilingual"}
+        ]
+      },
+      {
+        "id": 3,
+        "type": "timeseries",
+        "title": "Presentations Generated Over Time",
+        "gridPos": {"h": 6, "w": 18, "x": 0, "y": 6},
+        "datasource": "Prometheus",
+        "targets": [
+          {"expr": "presentations_generated_total", "legendFormat": "Total"}
+        ]
+      },
+      {
+        "id": 4,
+        "type": "table",
+        "title": "Pipeline CI/CD Audit History",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "datasource": "Prometheus",
+        "targets": [
+          {"expr": "pipeline_runs", "format": "table"}
+        ]
+      },
+      {
+        "id": 5,
+        "type": "logs",
+        "title": "Notifications Sent to Slack/Teams",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "datasource": "Loki",
+        "targets": [
+          {"expr": "{app=\"presentation-pipeline\"} |= \"notification\"", "refId": "A"}
+        ]
+      }
+    ]
+  }
+}

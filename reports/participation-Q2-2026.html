@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quartlerly Participation & Narrative Analytics - Q2 2026</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body{font-family:"Segoe UI",sans-serif;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff;padding:40px;margin:0}
+    .container{max-width:900px;margin:0 auto}
+    h1{font-size:2.5em;background:linear-gradient(90deg,#00d4ff,#7b2cbf);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .metric{background:rgba(255,255,255,0.05);border-radius:15px;padding:20px;margin:15px 0}
+    table{width:100%;border-collapse:collapse;margin-top:15px}
+    th,td{padding:12px;border-bottom:1px solid #4a4a6a;text-align:left}
+    th{color:#7b2cbf}
+    .chart-container{height:200px;margin:20px 0}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 Quarterly Participation & Narrative Analytics – Q2 2026</h1>
+    
+    <div class="metric">
+      <h2>Executive Summary</h2>
+      <p>Total Presentations: 12 | Success Rate: 100%</p>
+    </div>
+    
+    <div class="metric">
+      <h2>Presentations by Audience</h2>
+      <div class="chart-container"><canvas id="audienceChart"></canvas></div>
+      <table>
+        <tr><th>Audience</th><th>Count</th><th>%</th></tr>
+        <tr><td>CTO</td><td>4</td><td>33%</td></tr>
+        <tr><td>CEO</td><td>3</td><td>25%</td></tr>
+        <tr><td>Recruiters</td><td>2</td><td>17%</td></tr>
+        <tr><td>Clientes</td><td>2</td><td>17%</td></tr>
+        <tr><td>Inversionistas</td><td>1</td><td>8%</td></tr>
+        <tr><td>Equipo Interno</td><td>1</td><td>8%</td></tr>
+      </table>
+    </div>
+    
+    <div class="metric">
+      <h2>Language Distribution</h2>
+      <div class="chart-container"><canvas id="languageChart"></canvas></div>
+    </div>
+  </div>
+  
+  <script>
+    new Chart(document.getElementById("audienceChart"), {
+      type: "bar",
+      data: {
+        labels: ["CTO","CEO","Recruiters","Clientes","Inv","Interno"],
+        datasets: [{data: [33,25,17,17,8,8],backgroundColor:"#00d4ff"}]
+      }
+    });
+    new Chart(document.getElementById("languageChart"), {
+      type: "pie",
+      data: {
+        labels: ["English","Spanish","Bilingual"],
+        datasets: [{data: [25,33,42],backgroundColor:["#00d4ff","#7b2cbf","#00ff88"]}]
+      }
+    });
+  </script>
+</body>
+</html>
