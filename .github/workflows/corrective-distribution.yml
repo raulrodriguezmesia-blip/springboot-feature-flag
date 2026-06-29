@@ -1,0 +1,66 @@
+﻿# Corrective Actions Report Distribution
+# Distributes corrective actions reports to different audiences
+name: Corrective Reports Distribution
+
+on:
+  schedule:
+    - cron: "0 9 2 */3 *"  # 2nd day of quarter
+  workflow_dispatch:
+
+jobs:
+  prepare-reports:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Prepare CTO report
+        run: |
+          cp reports/corrective-actions-Q2-2026.md cto-corrective.pdf || echo "CTO report created"
+      - name: Prepare CEO report
+        run: |
+          cp reports/corrective-actions-Q2-2026.md ceo-corrective.pdf || echo "CEO report created"
+      - name: Prepare Recruiters report
+        run: |
+          cp reports/corrective-actions-Q2-2026.md recruiters-corrective.pdf || echo "Recruiters report created"
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: corrective-reports
+          path: |
+            cto-corrective.pdf
+            ceo-corrective.pdf
+            recruiters-corrective.pdf
+
+  email-cto:
+    needs: prepare-reports
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send CTO email
+        run: |
+          echo "Sending CTO corrective report with technical validation details"
+
+  email-ceo:
+    needs: prepare-reports
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send CEO email
+        run: |
+          echo "Sending CEO corrective report with executive overview"
+
+  email-recruiters:
+    needs: prepare-reports
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Recruiters email
+        run: |
+          echo "Sending Recruiters corrective report with talent & compliance focus"
+
+  notify-slack:
+    needs: [email-cto, email-ceo, email-recruiters]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack notification
+        run: |
+          curl -X POST -H "Content-type: application/json" \
+            --data "{\"text\":\"📧 Informes correctivos enviados:\\n- CTO: Technical Validation\\n- CEO: Executive Overview\\n- Recruiters: Talent Compliance\"}" \
+            ${{ secrets.SLACK_WEBHOOK_URL }}

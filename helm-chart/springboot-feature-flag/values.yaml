@@ -1,19 +1,16 @@
 ﻿# Default values for springboot-feature-flag
 # This is a YAML-formatted file.
 
-# Image configuration
 image:
   repository: raulrodriguezmesia/springboot-feature-flag
   tag: latest
   pullPolicy: IfNotPresent
 
-# Service configuration
 service:
   type: ClusterIP
   port: 8080
   namespace: production
 
-# Ingress configuration
 ingress:
   enabled: true
   className: nginx
@@ -25,30 +22,6 @@ ingress:
     nginx.ingress.kubernetes.io/rewrite-target: /
     cert-manager.io/cluster-issuer: letsencrypt-prod
 
-# Cert-manager configuration
-certManager:
-  enabled: true
-  clusterIssuer: letsencrypt-prod
-
-# Observability configuration
-observability:
-  prometheus: true
-  grafana: true
-  loki: true
-
-# Loki configuration
-loki:
-  enabled: true
-  datasource: loki
-
-# Alerts configuration
-alerts:
-  enabled: true
-  severity: critical
-  slack: true
-  teams: false
-
-# Autoscaling configuration (Hybrid HPA + VPA)
 autoscaling:
   hpa:
     enabled: true
@@ -65,186 +38,12 @@ autoscaling:
     maxMemory: 4Gi
     updateMode: Auto
 
-# Global Load Balancer configuration
-globalLoadBalancer:
-  enabled: true
-  domain: featureflags.global.com
-  azureFrontDoor: true
-  gcpLoadBalancer: true
-
-# Disaster Recovery configuration
 disasterRecovery:
   enabled: true
   domain: featureflags.global.com
   primaryCluster: aks
   secondaryCluster: gke
-  healthCheckPath: /actuator/health
 
-# Chaos Testing configuration
-chaosTesting:
-  enabled: true
-  experiments:
-    - pod-delete
-    - network-loss
-    - cpu-hog
-
-# Reports configuration
-reports:
-  resilienceHistorical:
-    enabled: true
-    schedule: weekly
-    format:
-      - pdf
-      - html
-    notifySlack: true
-    notifyTeams: true
-
-# Cloud Archive configuration
-cloudArchive:
-  enabled: true
-  versioning: true
-  namingConvention: resilience-report-<date>-v<version>
-  indexFile: true
-  providers:
-    - onedrive
-    - googleDrive
-  folder: ResilienceReports
-  notifySlack: true
-  notifyTeams: true
-
-# Quarterly Presentation configuration
-quarterlyPresentation:
-  enabled: true
-  format:
-    - pptx
-    - pdf
-  archive:
-    - onedrive
-    - googleDrive
-  notifySlack: true
-  notifyTeams: true
-  schedule: quarterly
-
-# Dynamic Language Narrative configuration
-narrativeDynamicLanguage:
-  enabled: true
-  rules:
-    CTO: en
-    CEO: es
-    Recruiters: bilingual
-  formats:
-    - pptx
-    - pdf
-    - canva
-  archive:
-    - onedrive
-    - googleDrive
-  notifySlack: true
-  notifyTeams: true
-
-# Calendar Integration configuration
-calendarIntegration:
-  enabled: true
-  providers:
-    - outlook
-    - google_calendar
-  rules:
-    CTO: en
-    CEO: es
-    Recruiters: bilingual
-  formats:
-    - pptx
-    - pdf
-    - canva
-  archive:
-    - onedrive
-    - googleDrive
-  notifySlack: true
-  notifyTeams: true
-
-# Email Distribution configuration
-emailDistribution:
-  enabled: true
-  audiences:
-    CTO: technical
-    CEO: executive
-    Recruiters: branding
-  formats:
-    - pdf
-    - html
-  archive:
-    - onedrive
-    - googleDrive
-  notifySlack: true
-  notifyTeams: true
-  schedule: quarterly
-
-# Digital Signature configuration
-digitalSignature:
-  enabled: true
-  algorithm: sha256
-  provider: gpg
-  archiveSignedReports: true
-  auditLog: true
-  notifySlack: true
-  notifyTeams: true
-
-# Verification Pipeline configuration
-verificationPipeline:
-  enabled: true
-  signatureProvider: gpg
-  hashAlgorithm: sha256
-  archiveAccepted: true
-  archiveRejected: true
-  auditLog: true
-  notifySlack: true
-  notifyTeams: true
-
-# Rejection Alerts configuration
-rejectionAlerts:
-  enabled: true
-  threshold: 20
-  notifySlack: true
-  notifyTeams: true
-  notifyEmail: true
-  severityLevels:
-    warning: 10
-    critical: 20
-
-# Rejection Feedback configuration
-rejectionFeedback:
-  enabled: true
-  notifySender: true
-  archiveRejected: true
-  auditLog: true
-  notifySlack: true
-  notifyTeams: true
-
-# Retry System configuration
-retrySystem:
-  enabled: true
-  monitorFolder: ResilienceReports/Incoming
-  archiveAccepted: true
-  archiveRejected: true
-  auditLog: true
-  notifySlack: true
-  notifyTeams: true
-  notifySender: true
-
-# Predictive Alerts configuration
-predictiveAlerts:
-  enabled: true
-  model: lstm
-  predictionWindow: 7d
-  thresholds:
-    low: "<10"
-    medium: "10-20"
-    high: ">20"
-  notifySlack: true
-  notifyTeams: true
-  archivePredictions: true
-
-# Proactive Corrections configuration
 proactiveCorrections:
   enabled: true
   triggerRiskLevel: high
@@ -253,34 +52,15 @@ proactiveCorrections:
     - x509
     - sha256
     - sha512
-  whitelistKeys: true
-  archivePreemptive: true
-  auditLog: true
-  notifySlack: true
-  notifyTeams: true
 
-# Resource configuration
-resources:
-  requests:
-    cpu: 200m
-    memory: 512Mi
-  limits:
-    cpu: 500m
-    memory: 1Gi
-
-# ConfigMap configuration
-config:
+correctiveReportsDistribution:
   enabled: true
+  audiences:
+    CTO: technical
+    CEO: executive
+    Recruiters: bilingual
 
-# Secret configuration  
-secret:
+distributionTraceability:
   enabled: true
-
-# Node selector for scheduling
-nodeSelector: {}
-
-# Tolerations for tainted nodes
-tolerations: []
-
-# Affinity configuration
-affinity: {}
+  trackOpen: true
+  trackDownload: true
