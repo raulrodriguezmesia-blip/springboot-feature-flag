@@ -65,6 +65,30 @@ autoscaling:
     maxMemory: 4Gi
     updateMode: Auto
 
+# Global Load Balancer configuration
+# For multi-cluster AKS + GKE setup
+globalLoadBalancer:
+  enabled: true
+  domain: featureflags.global.com
+  azureFrontDoor: true
+  gcpLoadBalancer: true
+
+# Disaster Recovery configuration
+disasterRecovery:
+  enabled: true
+  domain: featureflags.global.com
+  primaryCluster: aks
+  secondaryCluster: gke
+  healthCheckPath: /actuator/health
+
+# Chaos Testing configuration
+chaosTesting:
+  enabled: true
+  experiments:
+    - pod-delete
+    - network-loss
+    - cpu-hog
+
 # Resource configuration
 resources:
   requests:

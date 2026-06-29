@@ -1,0 +1,40 @@
+﻿{{- if .Values.chaosTesting.enabled }}
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: {{ include "springboot-feature-flag.fullname" . }}-podchaos
+  labels:
+    {{- include "springboot-feature-flag.labels" . | nindent 4 }}
+    chaos-mesh: "enabled"
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces:
+      - {{ .Values.service.namespace | default "production" }}
+    labelSelectors:
+      app.kubernetes.io/name: {{ include "springboot-feature-flag.fullname" . }}
+  duration: "30s"
+---
+# NetworkChaos para Chaos Mesh
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: {{ include "springboot-feature-flag.fullname" . }}-networkchaos
+  labels:
+    {{- include "springboot-feature-flag.labels" . | nindent 4 }}
+    chaos-mesh: "enabled"
+spec:
+  action: delay
+  mode: one
+  selector:
+    namespaces:
+      - {{ .Values.service.namespace | default "production" }}
+    labelSelectors:
+      app.kubernetes.io/name: {{ include "springboot-feature-flag.fullname" . }}
+  delay:
+    latency: "10ms"
+    correlation: "100"
+    jitter: "0ms"
+  duration: "60s"
+{{- end }}
