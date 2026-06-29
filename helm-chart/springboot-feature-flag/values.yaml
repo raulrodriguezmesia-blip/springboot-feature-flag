@@ -7,9 +7,6 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 
-# Replica count for the deployment
-replicaCount: 2
-
 # Service configuration
 service:
   type: ClusterIP
@@ -51,30 +48,22 @@ alerts:
   slack: true
   teams: false
 
-# HPA configuration (resource based)
-hpa:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 10
-  cpuUtilization: 70
-  memoryUtilization: 80
-
-# HPA Custom configuration (Prometheus metrics based)
-hpaCustom:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 10
-  requestsPerSecond: 100
-  cpuUtilization: 70
-
-# VPA configuration
-vpa:
-  enabled: true
-  minCpu: 200m
-  minMemory: 256Mi
-  maxCpu: 2000m
-  maxMemory: 4Gi
-  updateMode: Auto
+# Autoscaling configuration (Hybrid HPA + VPA)
+autoscaling:
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    requestsPerSecond: 100
+    cpuUtilization: 70
+    memoryUtilization: 80
+  vpa:
+    enabled: true
+    minCpu: 200m
+    minMemory: 256Mi
+    maxCpu: 2000m
+    maxMemory: 4Gi
+    updateMode: Auto
 
 # Resource configuration
 resources:

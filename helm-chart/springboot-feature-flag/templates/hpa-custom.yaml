@@ -1,10 +1,9 @@
-﻿{{- if .Values.hpaCustom.enabled }}
-# HPA basado en métricas personalizadas de Prometheus
-# Requiere: Prometheus Adapter instalado en el cluster
+﻿{{- if .Values.autoscaling.hpa.enabled }}
+# HorizontalPodAutoscaler con métricas híbridas (custom + resource)
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "springboot-feature-flag.fullname" . }}-hpa-custom
+  name: {{ include "springboot-feature-flag.fullname" . }}-hpa
   labels:
     {{- include "springboot-feature-flag.labels" . | nindent 4 }}
 spec:
@@ -12,22 +11,29 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ include "springboot-feature-flag.fullname" . }}
-  minReplicas: {{ .Values.hpaCustom.minReplicas }}
-  maxReplicas: {{ .Values.hpaCustom.maxReplicas }}
+  minReplicas: {{ .Values.autoscaling.hpa.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.hpa.maxReplicas }}
   metrics:
-    # Métrica personalizada: HTTP requests per second
+    # Métrica personalizada: HTTP requests per second (requiere Prometheus Adapter)
     - type: Pods
       pods:
         metric:
           name: http_requests_per_second
         target:
           type: AverageValue
-          averageValue: {{ .Values.hpaCustom.requestsPerSecond }}
+          averageValue: {{ .Values.autoscaling.hpa.requestsPerSecond }}
     # Métrica estándar: CPU utilization
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: {{ .Values.hpaCustom.cpuUtilization }}
+          averageUtilization: {{ .Values.autoscaling.hpa.cpuUtilization }}
+    # Métrica estándar: Memory utilization
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.hpa.memoryUtilization }}
 {{- end }}

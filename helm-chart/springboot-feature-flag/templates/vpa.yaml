@@ -1,6 +1,6 @@
-﻿{{- if .Values.vpa.enabled }}
-# Vertical Pod Autoscaler for springboot-feature-flag
-# Automatically adjusts CPU and memory requests based on usage
+﻿{{- if .Values.autoscaling.vpa.enabled }}
+# Vertical Pod Autoscaler - Hybrid with HPA
+# Note: Use HPA for scaling replicas, VPA for resource recommendations
 apiVersion: autoscaling.k8s.io/v1
 kind: VerticalPodAutoscaler
 metadata:
@@ -13,15 +13,15 @@ spec:
     kind: Deployment
     name: {{ include "springboot-feature-flag.fullname" . }}
   updatePolicy:
-    updateMode: {{ .Values.vpa.updateMode }}
+    updateMode: {{ .Values.autoscaling.vpa.updateMode }}
   resourcePolicy:
     containerPolicies:
       - containerName: {{ .Chart.Name }}
         minAllowed:
-          cpu: {{ .Values.vpa.minCpu }}
-          memory: {{ .Values.vpa.minMemory }}
+          cpu: {{ .Values.autoscaling.vpa.minCpu }}
+          memory: {{ .Values.autoscaling.vpa.minMemory }}
         maxAllowed:
-          cpu: {{ .Values.vpa.maxCpu }}
-          memory: {{ .Values.vpa.maxMemory }}
+          cpu: {{ .Values.autoscaling.vpa.maxCpu }}
+          memory: {{ .Values.autoscaling.vpa.maxMemory }}
         controlledResources: ["cpu", "memory"]
 {{- end }}
