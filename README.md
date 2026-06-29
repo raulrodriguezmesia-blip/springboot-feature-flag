@@ -1,84 +1,131 @@
-﻿🚀 Spring Boot Feature Flag Service
-📌 Descripción
-Microservicio en Spring Boot que implementa un sistema de feature flags para activar o desactivar funcionalidades dinámicamente sin necesidad de redeploy.
-Este proyecto demuestra cómo aplicar configuración dinámica en arquitecturas backend modernas.
+﻿# 🚀 Spring Boot Feature Flag Service
 
-🎯 Contexto profesional
-Este proyecto refleja habilidades clave:
+[![Build](https://img.shields.io/badge/build-passing-brightgreen)]()
+[![Java](https://img.shields.io/badge/java-17+-blue?logo=java)]()
+[![Spring%20Boot](https://img.shields.io/badge/spring--boot-3.0-brightgreen?logo=spring)]()
+[![Docker](https://img.shields.io/badge/docker-ready-blue?logo=docker)]()
+[![Helm](https://img.shields.io/badge/helm-k8s-blue?logo=helm)]()
+[![License](https://img.shields.io/badge/license-MIT-green)]()
 
-Backend avanzado con Java + Spring Boot.
+[![LinkedIn](https://img.shields.io/badge/linkedin-RaulRodriguezMesia-blue?logo=linkedin)](https://linkedin.com/in/raul-rodriguez-mesia-bb8178149)
+[![GitHub](https://img.shields.io/badge/github-raulrodriguezmesia--blip-black?logo=github)](https://github.com/raulrodriguezmesia-blip/springboot-feature-flag)
 
-Arquitecturas flexibles mediante feature flags.
+---
 
-CI/CD y despliegue cloud-ready.
+## 💼 Contexto profesional
 
-Documentación y buenas prácticas para equipos.
+Microservicio que implementa **feature flags dinámicos sin redeploy**, demostrando:
 
-⚙️ Arquitectura
-Diagrama ASCII
-Código
+- ✅ **Backend avanzado**: Java 17 + Spring Boot 3 + Clean Architecture
+- ✅ **Configuración dinámica**: Control de funcionalidades en tiempo real
+- ✅ **CI/CD integral**: GitHub Actions + Docker + Kubernetes-ready
+- ✅ **Observabilidad**: Actuator + Prometheus + Health Checks
+- ✅ **Seguridad enterprise**: JWT + Role-Based Access Control
+
+Primer proyecto de un portafolio orientado a microservicios escalables.
+
+---
+
+## ⚙️ Arquitectura
+
+### Diagrama ASCII
+```
 [Cliente] ---> [Spring Boot Service] ---> [Feature Flag Config]
-                               |
-                               ---> [Enabled/Disabled Logic]
-Diagrama Mermaid
-mermaid
+                                   |
+                                   ---> [Enabled/Disabled Logic]
+```
+
+### Diagrama Mermaid
+```mermaid
 flowchart LR
     A[Cliente] --> B[Spring Boot Service]
     B --> C[Feature Flag Config]
-    C --> D[Funcionalidad habilitada/deshabilitada]
-🛠️ Instalación y ejecución
-bash
-# Clonar repositorio
+    C --> D{Enabled/Disabled Logic}
+    D -->|Enabled| E[Funcionalidad activa]
+    D -->|Disabled| F[Funcionalidad inactiva]
+```
+
+---
+
+## 🛠️ Instalación y ejecución
+
+### Con Docker Compose (recomendado)
+```bash
 git clone https://github.com/raulrodriguezmesia-blip/springboot-feature-flag.git
+cd springboot-feature-flag
+make build
+make up
+curl http://localhost:8080/actuator/health
+```
 
-# Construir con Maven
+### Con Maven
+```bash
 mvn clean install
-
-# Ejecutar aplicación
 mvn spring-boot:run
-📂 Demo
-Endpoint: /api/feature/{flagName}
+```
 
-Ejemplo: GET /api/feature/newDashboard → true/false
+### Con Kubernetes
+```bash
+helm install feature-flag ./helm-chart/feature-flag-service
+```
 
-📸 Capturas/Gifs sugeridos
+---
 
-Flag activado → nueva funcionalidad visible.
+## 🎥 Demo
 
-Flag desactivado → funcionalidad oculta.
+### Endpoints
+```bash
+# Activar feature flag
+curl -X POST "http://localhost:8080/api/feature-flags?key=newDashboard&enabled=true" \
+  -H "Authorization: Bearer <JWT_TOKEN>"
 
-(Agrega aquí imágenes o gifs mostrando la activación/desactivación de flags)
+# Verificar estado
+curl http://localhost:8080/api/feature-flags/newDashboard \
+  -H "Authorization: Bearer <JWT_TOKEN>"
+# Resultado: true o false
+```
 
-📅 Roadmap futuro
-Este repositorio será el inicio de un portafolio completo con proyectos complementarios:
+### Video Showcase
+[![Video](https://img.shields.io/badge/video-12s_Showcase-blue?logo=youtube)](https://github.com/raulrodriguezmesia-blip/springboot-feature-flag/raw/master/presentation/feature-showcase.mp4)
 
-Event‑Driven Notification Service (Kafka + WebSocket)
+---
 
-Observability Dashboard (Prometheus + Grafana + Loki)
+## 📅 Roadmap futuro
 
-Microservice Template (Spring Boot + Helm + CI/CD)
+| Proyecto | Tecnologías | Estado |
+|----------|-------------|--------|
+| **Event-Driven Notification Service** | Kafka + WebSocket | 🔜 |
+| **Observability Dashboard** | Prometheus + Grafana + Loki | 🔜 |
+| **Microservice Template** | Spring Boot + Helm + CI/CD | 🔜 |
+| **Multi-cloud Deployment Guide** | Terraform + AKS + GKE | 🔜 |
 
-Multi‑cloud Deployment Guide (Terraform + AKS + GKE)
+---
 
-🧰 Tecnologías usadas
-https://img.shields.io/badge/Java-17-blue  
-https://img.shields.io/badge/SpringBoot-3.0-green  
-https://img.shields.io/badge/Maven-Build-orange  
-https://img.shields.io/badge/Docker-Ready-blue  
-https://img.shields.io/badge/GitHub-Actions-lightgrey
+## 🧰 Tecnologías usadas
 
-💡 Valor profesional
+| ☕ Java 17 | 🍃 Spring Boot 3 | Ⓜ️ Maven | 🐳 Docker | ☁️ AWS | 🎯 Helm | 📋 GitHub Actions |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+
+---
+
+## 💡 Valor profesional
+
 Este proyecto demuestra experiencia en:
 
-Feature flags y configuración dinámica.
+- ✅ Feature flags en microservicios
+- ✅ Arquitectura cloud-native
+- ✅ DevOps: CI/CD + Containers + Kubernetes
+- ✅ Seguridad: JWT + RBAC
+- ✅ Observabilidad: Métricas + Health Checks
 
-Microservicios escalables y listos para cloud.
+---
 
-Buenas prácticas de documentación y despliegue.
+## 📬 Contacto
 
-📬 Contacto
-Raúl Rodriguez Mesia
+**Raúl Rodriguez Mesia** - Backend Developer  
+Especialista en Java, Spring Boot, AWS, Docker, CI/CD
 
-LinkedIn: linkedin.com/in/raulrodriguezmesia (linkedin.com in Bing)
+[![GitHub](https://img.shields.io/badge/github-raulrodriguezmesia--blip-black?logo=github)](https://github.com/raulrodriguezmesia-blip)
+[![LinkedIn](https://img.shields.io/badge/linkedin-RaulRodriguezMesia-blue?logo=linkedin)](https://linkedin.com/in/raul-rodriguez-mesia-bb8178149)
 
-GitHub: github.com/raulrodriguezmesia-blip
+**Licencia**: MIT
