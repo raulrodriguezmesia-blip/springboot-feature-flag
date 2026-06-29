@@ -162,6 +162,23 @@ calendarIntegration:
   notifySlack: true
   notifyTeams: true
 
+# Email Distribution configuration
+emailDistribution:
+  enabled: true
+  audiences:
+    CTO: technical
+    CEO: executive
+    Recruiters: branding
+  formats:
+    - pdf
+    - html
+  archive:
+    - onedrive
+    - googleDrive
+  notifySlack: true
+  notifyTeams: true
+  schedule: quarterly
+
 # Resource configuration
 resources:
   requests:
