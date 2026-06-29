@@ -1,0 +1,36 @@
+﻿# ClusterIssuer for Let's Encrypt Production
+# This ClusterIssuer configures cert-manager to issue certificates from Let's Encrypt
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    # ACME server URL for Let's Encrypt
+    server: https://acme-v02.api.letsencrypt.org/directory
+    # Email for ACME registration and expiry notices
+    email: raulrodriguezmesia@example.com
+    # Secret to store the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-prod-key
+    # Enable the HTTP-01 challenge
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
+---
+# ClusterIssuer for Let's Encrypt Staging (for testing)
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: raulrodriguezmesia@example.com
+    privateKeySecretRef:
+      name: letsencrypt-staging-key
+    solvers:
+      - http01:
+          ingress:
+            class: nginx

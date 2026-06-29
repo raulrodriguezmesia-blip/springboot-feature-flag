@@ -26,6 +26,11 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 
+# Cert-manager configuration
+certManager:
+  enabled: true
+  clusterIssuer: letsencrypt-prod
+
 # Resource configuration
 resources:
   requests:

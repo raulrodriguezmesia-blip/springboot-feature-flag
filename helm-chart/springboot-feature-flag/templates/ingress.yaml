@@ -9,8 +9,10 @@ metadata:
     # NGINX Ingress Controller
     kubernetes.io/ingress.class: {{ .Values.ingress.className | quote }}
     nginx.ingress.kubernetes.io/rewrite-target: /
-    # Cert-manager annotations (uncomment to enable automatic TLS)
-    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    {{- if .Values.ingress.tls.enabled }}
+    # Cert-manager annotation for automatic TLS
+    cert-manager.io/cluster-issuer: {{ .Values.certManager.clusterIssuer | quote }}
+    {{- end }}
 spec:
   rules:
     - host: {{ .Values.ingress.host | quote }}

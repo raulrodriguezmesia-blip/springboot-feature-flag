@@ -1,0 +1,14 @@
+﻿apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "springboot-feature-flag.fullname" . }}-config
+  labels:
+    {{- include "springboot-feature-flag.labels" . | nindent 4 }}
+data:
+  # Feature flags configuration
+  FEATURE_FLAG_ENABLED: "true"
+  FEATURE_FLAG_EXPERIMENTAL: "false"
+  FEATURE_FLAG_BETA: "false"
+  # Add more flags dynamically here
+  # FEATURE_FLAG_NEW_FEATURE: "true"
+  # FEATURE_FLAG_ROLLOUT_PERCENTAGE: "50"
