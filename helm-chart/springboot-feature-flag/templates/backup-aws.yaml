@@ -1,0 +1,32 @@
+﻿{{- if .Values.orchestration.backupProviders.awsS3 }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "springboot-feature-flag.fullname" . }}-backup-aws
+spec:
+  schedule: "0 1 * * *"  # Daily at 1 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: backup-aws
+              image: amazon/aws-cli:2.15.20
+              env:
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: aws-credentials
+                      key: access-key-id
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: aws-credentials
+                      key: secret-access-key
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  aws s3 sync /reports s3://{{ .Values.globalLoadBalancer.domain }}-backups/
+          restartPolicy: OnFailure
+{{- end }}

@@ -1,0 +1,82 @@
+﻿apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: executive-reporting-orchestration
+  namespace: reporting
+spec:
+  entrypoint: main
+  arguments:
+    parameters:
+      - name: quarter
+        value: "2"
+      - name: year
+        value: "2026"
+
+  # Volume para compartir datos entre pods
+  volumes:
+    - name: shared-data
+      emptyDir: {}
+
+  templates:
+    - name: main
+      steps:
+        - - name: generate-reports
+            template: generate
+        - - name: verify-signatures
+            template: verify
+        - - name: distribute-emails
+            template: distribute
+        - - name: track-deliveries
+            template: trace
+        - - name: update-dashboards
+            template: dashboard
+
+    - name: generate
+      container:
+        image: curlimages/curl:8.0
+        command: [sh, -c]
+        args:
+          - echo "Generating quarterly reports for Q{{workflow.parameters.quarter}} {{workflow.parameters.year}}"
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data
+
+    - name: verify
+      container:
+        image: alpine/gnupg:3.9
+        command: [sh, -c]
+        args:
+          - echo "Verifying digital signatures and hashes"
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data
+
+    - name: distribute
+      container:
+        image: node:20-alpine
+        command: [sh, -c]
+        args:
+          - echo "Sending email distribution to CTO/CEO/Recruiters"
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data
+
+    - name: trace
+      container:
+        image: python:3.11-slim
+        command: [sh, -c]
+        args:
+          - echo "Tracking email opens and downloads"
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data
+
+    - name: dashboard
+      container:
+        image: curlimages/curl:8.0
+        command: [sh, -c]
+        args:
+          - echo "Updating Grafana dashboards with metrics"
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data

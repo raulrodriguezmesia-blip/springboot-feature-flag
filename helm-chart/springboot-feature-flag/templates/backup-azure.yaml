@@ -1,0 +1,27 @@
+﻿{{- if .Values.orchestration.backupProviders.azureBlob }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "springboot-feature-flag.fullname" . }}-backup-azure
+spec:
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: backup-azure
+              image: mcr.microsoft.com/azure-cli:2.53.0
+              env:
+                - name: AZURE_STORAGE_CONNECTION_STRING
+                  valueFrom:
+                    secretKeyRef:
+                      name: azure-storage-secret
+                      key: connectionString
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  az storage blob upload-batch --destination resilience-backups
+          restartPolicy: OnFailure
+{{- end }}
