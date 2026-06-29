@@ -2,36 +2,26 @@
 # Pipeline de despliegue continuo en Kubernetes usando Helm
 name: CD - Spring Boot Feature Flag to Kubernetes
 
-# Eventos que disparan el workflow
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     tags:
-      - 'v*.*.*'  # Tags de versión como v1.0.0
-  workflow_dispatch:  # Permite disparar manualmente
+      - 'v*.*.*'
+  workflow_dispatch:
 
-# Jobs del pipeline
 jobs:
   docker-build-and-push:
     runs-on: ubuntu-latest
-    
     steps:
-      # 1. Checkout del repositorio
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      # 2. Configurar Docker
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
-      
-      # 3. Login en Docker Hub
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      
-      # 4. Preparar tags
       - name: Set version tags
         id: meta
         run: |
@@ -39,8 +29,6 @@ jobs:
           COMMIT_SHA=${GITHUB_SHA::8}
           echo "image=${IMAGE_NAME}" >> $GITHUB_OUTPUT
           echo "tag=${COMMIT_SHA}" >> $GITHUB_OUTPUT
-      
-      # 5. Construir y push imagen Docker
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -53,51 +41,36 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy-to-kubernetes:
-    # Depende del job anterior
     needs: docker-build-and-push
     runs-on: ubuntu-latest
-    
     steps:
-      # 1. Checkout del repositorio
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      # 2. Configurar kubectl
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
         with:
           version: 'v1.28.0'
-      
-      # 3. Configurar kubeconfig
       - name: Set up Kubernetes config
         run: |
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBE_CONFIG }}" > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
-      
-      # 4. Instalar Helm
       - name: Install Helm
         uses: azure/setup-helm@v4
         with:
           version: v3.13.0
-      
-      # 5. Deploy con Helm
       - name: Deploy to Kubernetes
         run: |
-          helm upgrade --install springboot-feature-flag ./helm-chart/feature-flag-service \
+          helm upgrade --install springboot-feature-flag ./helm-chart/springboot-feature-flag \
             --set image.repository=raulrodriguezmesia/springboot-feature-flag \
             --set image.tag=${{ github.sha }} \
             --namespace production \
             --create-namespace \
             --wait \
             --timeout 5m
-      
-      # 6. Verificar despliegue
       - name: Verify deployment
         run: |
           kubectl rollout status deployment/springboot-feature-flag -n production --timeout=120s
-      
-      # 7. Validación post-deploy
       - name: Health check
         run: |
           echo "Health check ready - validate endpoint manually"
