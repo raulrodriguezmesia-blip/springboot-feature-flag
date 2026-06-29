@@ -1,0 +1,37 @@
+﻿{
+  "dashboard": {
+    "id": null,
+    "title": "Impact Analytics Dashboard",
+    "tags": ["impact", "correlation", "executive", "decisions"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "type": "timeseries",
+        "title": "Reports Distributed vs Executive Actions",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 0},
+        "datasource": "Prometheus",
+        "targets": [{"expr": "impact_score", "legendFormat": "Impact"}]
+      },
+      {
+        "id": 2,
+        "type": "graph",
+        "title": "CEO Meetings Correlation",
+        "gridPos": {"h": 6, "w": 6, "x": 0, "y": 6},
+        "datasource": "Prometheus",
+        "targets": [{"expr": "reports_to_ceo_meetings_ratio"}]
+      },
+      {
+        "id": 3,
+        "type": "graph",
+        "title": "Recruiters Hiring Correlation",
+        "gridPos": {"h": 6, "w": 6, "x": 6, "y": 6},
+        "datasource": "Prometheus",
+        "targets": [{"expr": "reports_to_hires_ratio"}]
+      }
+    ]
+  }
+}

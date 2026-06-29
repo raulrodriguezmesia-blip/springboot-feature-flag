@@ -1,0 +1,45 @@
+﻿{
+  "dashboard": {
+    "id": null,
+    "title": "Distribution Traceability Dashboard",
+    "tags": ["traceability", "email", "distribution", "audit"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "type": "gauge",
+        "title": "Reports Opened",
+        "gridPos": {"h": 5, "w": 6, "x": 0, "y": 0},
+        "datasource": "Prometheus",
+        "targets": [{"expr": "reports_opened_percentage", "format": "time_series"}]
+      },
+      {
+        "id": 2,
+        "type": "gauge",
+        "title": "Reports Downloaded",
+        "gridPos": {"h": 5, "w": 6, "x": 6, "y": 0},
+        "datasource": "Prometheus",
+        "targets": [{"expr": "reports_downloaded_percentage", "format": "time_series"}]
+      },
+      {
+        "id": 3,
+        "type": "stat",
+        "title": "Avg Time to Open",
+        "gridPos": {"h": 5, "w": 6, "x": 12, "y": 0},
+        "datasource": "Prometheus",
+        "targets": [{"expr": "average_time_to_open_seconds", "format": "table"}]
+      },
+      {
+        "id": 4,
+        "type": "table",
+        "title": "Traceability Log",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 5},
+        "datasource": "Loki",
+        "targets": [{"expr": "{app=\"distribution\"}", "refId": "A"}]
+      }
+    ]
+  }
+}
