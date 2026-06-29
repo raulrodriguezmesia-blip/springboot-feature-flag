@@ -1,57 +1,21 @@
-﻿# Default values for springboot-feature-flag
-# This is a YAML-formatted file.
-
-image:
+﻿image:
   repository: raulrodriguezmesia/springboot-feature-flag
   tag: latest
-  pullPolicy: IfNotPresent
-
-service:
-  type: ClusterIP
-  port: 8080
-  namespace: production
-
-ingress:
-  enabled: true
-  className: nginx
-  host: featureflags.example.com
-  tls:
-    enabled: true
-    secretName: springboot-feature-flag-tls
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    cert-manager.io/cluster-issuer: letsencrypt-prod
 
 autoscaling:
   hpa:
-    enabled: true
     minReplicas: 2
     maxReplicas: 10
-    requestsPerSecond: 100
     cpuUtilization: 70
-    memoryUtilization: 80
   vpa:
-    enabled: true
     minCpu: 200m
-    minMemory: 256Mi
     maxCpu: 2000m
-    maxMemory: 4Gi
     updateMode: Auto
-
-disasterRecovery:
-  enabled: true
-  domain: featureflags.global.com
-  primaryCluster: aks
-  secondaryCluster: gke
 
 proactiveCorrections:
   enabled: true
   triggerRiskLevel: high
-  extraValidations:
-    - gpg
-    - x509
-    - sha256
-    - sha512
+  extraValidations: [gpg, x509, sha256, sha512]
 
 correctiveReportsDistribution:
   enabled: true
@@ -64,3 +28,13 @@ distributionTraceability:
   enabled: true
   trackOpen: true
   trackDownload: true
+  archiveLogs: true
+  notifySlack: true
+  notifyTeams: true
+
+impactAnalytics:
+  enabled: true
+  calendarIntegration: true
+  correlateCEO: true
+  correlateRecruiters: true
+  dashboard: true

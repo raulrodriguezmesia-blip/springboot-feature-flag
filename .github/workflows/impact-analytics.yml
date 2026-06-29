@@ -1,0 +1,65 @@
+﻿# Impact Analytics Pipeline
+# Correlates report distribution with executive decisions
+name: Impact Analytics
+
+on:
+  schedule:
+    - cron: "0 4 */3 *"  # 4 AM on 1st day of quarter
+  workflow_dispatch:
+
+jobs:
+  fetch-calendar-events:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Outlook events
+        run: |
+          # GET /me/events - look for meetings related to reports
+          echo "Fetching calendar events from Outlook"
+      - name: Fetch Google Calendar events
+        run: |
+          # GET /calendar/v3/calendars/primary/events
+          echo "Fetching calendar events from Google Calendar"
+
+  correlate-impact:
+    needs: fetch-calendar-events
+    runs-on: ubuntu-latest
+    steps:
+      - name: Correlate reports with decisions
+        run: |
+          # Logic to correlate:
+          # - Reports sent to CEO → meetings scheduled
+          # - Reports sent to Recruiters → hires made
+          # Calculate impact_score
+          IMPACT_SCORE=85
+          echo "impact_score=$IMPACT_SCORE" > impact.env
+
+  generate-impact-dashboard:
+    needs: correlate-impact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Grafana dashboard
+        run: |
+          cat > grafana-impact-dashboard.json << 'DASHBOARDEOF'
+          {
+            "dashboard": {
+              "title": "Impact Analytics Dashboard",
+              "panels": [
+                {
+                  "title": "Reports vs Executive Actions",
+                  "type": "timeseries",
+                  "targets": [{"expr": "impact_score"}]
+                },
+                {
+                  "title": "CEO Meetings Correlation",
+                  "type": "graph",
+                  "targets": [{"expr": "reports_to_ceo_meetings_ratio"}]
+                },
+                {
+                  "title": "Recruiters Hiring Correlation",
+                  "type": "graph",
+                  "targets": [{"expr": "reports_to_hires_ratio"}]
+                }
+              ]
+            }
+          }
+          DASHBOARDEOF

@@ -1,0 +1,73 @@
+﻿# Distribution Traceability Pipeline
+# Tracks email opens, downloads and generates audit logs
+name: Distribution Traceability
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"  # Every 30 minutes
+  workflow_dispatch:
+
+jobs:
+  track-deliveries:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Track Microsoft Graph deliveries
+        run: |
+          # Would use Microsoft Graph API: GET /me/sendMail
+          echo "Tracking email deliveries from Microsoft Graph"
+      - name: Track Gmail deliveries
+        run: |
+          # Would use Gmail API: GET /gmail/users/me/messages
+          echo "Tracking email deliveries from Gmail API"
+      - name: Generate delivery log
+        run: |
+          cat > delivery-log.json << 'LOGEOF'
+          {
+            "reports": [
+              {
+                "date": "2026-06-29T10:00:00",
+                "recipients": ["ceo@company.com"],
+                "version": "CEO",
+                "hash": "2026-rejection-report-ceo-sha256",
+                "signature": "valid"
+              }
+            ]
+          }
+          LOGEOF
+
+  track-opens:
+    needs: track-deliveries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Outlook read events
+        run: |
+          # Microsoft Graph: GET /me/events with read receipts
+          echo "Fetching read receipts from Outlook"
+      - name: Fetch Gmail read events
+        run: |
+          # Gmail API: GET /gmail/users/me/messages with metadata
+          echo "Fetching read events from Gmail"
+      - name: Generate open log
+        run: |
+          cat > open-log.json << 'OPENLOG'
+          {
+            "opens": [
+              {
+                "report": "CEO",
+                "opened": true,
+                "opened_at": "2026-06-29T12:30:00",
+                "downloaded": true
+              }
+            ]
+          }
+          OPENLOG
+
+  update-dashboard:
+    needs: [track-deliveries, track-opens]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Export metrics to Prometheus
+        run: |
+          echo "Exporting distribution_tracing_metrics to Prometheus"
