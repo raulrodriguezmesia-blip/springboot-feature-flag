@@ -1,0 +1,4 @@
+﻿apiVersion: v2
+name: springboot-feature-flag
+version: 0.1.0
+description: Helm chart for Spring Boot Feature Flag Service

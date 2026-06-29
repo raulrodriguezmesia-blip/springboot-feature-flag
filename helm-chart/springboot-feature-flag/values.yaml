@@ -1,0 +1,46 @@
+﻿# Default values for springboot-feature-flag
+# This is a YAML-formatted file.
+
+# Image configuration
+image:
+  repository: raulrodriguezmesia/springboot-feature-flag
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Replica count for the deployment
+replicaCount: 2
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 8080
+
+# Ingress configuration (optional)
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: feature-flag.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+# Resource configuration
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+# Node selector for scheduling
+nodeSelector: {}
+
+# Tolerations for tainted nodes
+tolerations: []
+
+# Affinity configuration
+affinity: {}
