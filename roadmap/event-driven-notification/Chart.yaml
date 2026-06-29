@@ -1,0 +1,9 @@
+﻿apiVersion: v2
+name: notification-service
+description: Event-driven notifications with Kafka + WebSocket
+type: application
+version: 0.1.0
+
+env:
+  KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+  WEBSOCKET_PATH: /ws/notifications
