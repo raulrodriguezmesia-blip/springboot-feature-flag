@@ -22,10 +22,17 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
-          env:
-            # Extensible: mount environment variables from ConfigMap/Secret
-            - name: SERVER_PORT
-              value: "{{ .Values.service.port }}"
+          envFrom:
+            # Mount all env vars from ConfigMap
+            {{- if .Values.config.enabled }}
+            - configMapRef:
+                name: {{ include "springboot-feature-flag.fullname" . }}-config
+            {{- end }}
+            # Mount all env vars from Secret
+            {{- if .Values.secret.enabled }}
+            - secretRef:
+                name: {{ include "springboot-feature-flag.fullname" . }}-secret
+            {{- end }}
           livenessProbe:
             httpGet:
               path: /actuator/health
