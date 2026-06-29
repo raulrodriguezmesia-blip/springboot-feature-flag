@@ -51,13 +51,21 @@ alerts:
   slack: true
   teams: false
 
-# HPA configuration
+# HPA configuration (resource based)
 hpa:
   enabled: true
   minReplicas: 2
   maxReplicas: 10
   cpuUtilization: 70
   memoryUtilization: 80
+
+# HPA Custom configuration (Prometheus metrics based)
+hpaCustom:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  requestsPerSecond: 100
+  cpuUtilization: 70
 
 # Resource configuration
 resources:

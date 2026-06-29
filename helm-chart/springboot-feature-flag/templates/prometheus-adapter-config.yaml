@@ -1,0 +1,24 @@
+﻿{{- if .Values.hpaCustom.enabled }}
+# ConfigMap para Prometheus Adapter
+# Expone métricas personalizadas para HPA
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "springboot-feature-flag.fullname" . }}-custom-metrics
+  namespace: monitoring
+  labels:
+    {{- include "springboot-feature-flag.labels" . | nindent 6 }}
+data:
+  config.yaml: |
+    rules:
+    - seriesQuery: 'http_server_requests_seconds_count{job="springboot-feature-flag"}'
+      resources:
+        overrides:
+          namespace: {resource: "namespace"}
+          pod: {resource: "pod"}
+      name:
+        matches: "http_server_requests_seconds_count"
+        as: "http_requests_per_second"
+      metricsQuery: |
+        rate(http_server_requests_seconds_count{<<.LabelMatchers>>}[1m])
+{{- end }}
