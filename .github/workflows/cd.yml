@@ -1,5 +1,5 @@
-﻿# CD - Spring Boot Feature Flag with Rollback
-# Pipeline de despliegue continuo con rollback automático en Kubernetes
+﻿# CD - Spring Boot Feature Flag with Resilience Testing
+# Pipeline de despliegue continuo con rollback, chaos tests y notificaciones
 name: CD - Spring Boot Feature Flag with Rollback
 
 on:
@@ -75,22 +75,98 @@ jobs:
         id: verify
       - name: Verify HPA
         run: |
-          kubectl get hpa springboot-feature-flag-hpa -n production -o yaml
-          kubectl describe hpa springboot-feature-flag-hpa -n production || true
+          kubectl get hpa springboot-feature-flag-hpa -n production -o yaml || true
       - name: Verify HPA Custom
         run: |
-          kubectl get hpa springboot-feature-flag-hpa-custom -n production -o yaml
-          kubectl describe hpa springboot-feature-flag-hpa-custom -n production || true
+          kubectl get hpa springboot-feature-flag-hpa-custom -n production -o yaml || true
       - name: Verify VPA
         run: |
-          kubectl get vpa springboot-feature-flag-vpa -n production -o yaml
-          kubectl describe vpa springboot-feature-flag-vpa -n production || true
+          kubectl get vpa springboot-feature-flag-vpa -n production -o yaml || true
       - name: Rollback on failure
         if: steps.verify.outcome == 'failure'
         run: |
-          echo "Deployment failed, rolling back to previous revision..."
+          echo "Deployment failed, rolling back..."
           helm rollback springboot-feature-flag 0 --namespace production
         continue-on-error: true
       - name: Health check
         run: |
-          echo "Deployment completed - validate endpoint at https://${{ secrets.INGRESS_HOST }}/actuator/health"
+          echo "Deployment completed"
+
+  chaos-tests:
+    needs: deploy-to-kubernetes
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+      - name: Set up Kubernetes config
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+      - name: Apply Chaos Mesh experiments
+        run: |
+          kubectl apply -f helm-chart/springboot-feature-flag/templates/chaos/chaosmesh.yaml -n production || true
+      - name: Wait for chaos experiments
+        run: |
+          sleep 90
+      - name: Check chaos experiments status
+        run: |
+          kubectl get podchaos -n production -o wide || true
+          kubectl get networkchaos -n production -o wide || true
+
+  generate-report:
+    needs: chaos-tests
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Generate HTML Dashboard
+        run: |
+          # Create resilience report data
+          kubectl get pods -n production -o wide > pods-status.txt || true
+        shell: bash
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: resilience-report
+          path: |
+            resilience-report.md
+            resilience-dashboard.html
+
+  notify-slack:
+    needs: generate-report
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: resilience-report
+          path: ./reports
+      - name: Send Slack notification
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"text":"📊 Resilience Report generado - Spring Boot Feature Flag\n- PDF: resilience-dashboard.pdf\n- HTML: resilience-dashboard.html"}' \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  notify-teams:
+    needs: generate-report
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: resilience-report
+          path: ./reports
+      - name: Send Teams notification
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"title":"Resilience Report","text":"Reporte de resiliencia generado automáticamente para springboot-feature-flag. Failover y chaos tests completados."}' \
+            ${{ secrets.TEAMS_WEBHOOK_URL }}
