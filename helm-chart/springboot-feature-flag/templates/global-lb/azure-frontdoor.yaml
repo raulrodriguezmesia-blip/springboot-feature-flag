@@ -1,0 +1,67 @@
+﻿# Azure Front Door configuration for global load balancing
+# Deploy via: az deployment group create --template-file azure-frontdoor.yaml
+# Parameters should be set in Azure DevOps/CLI
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "frontDoorName": { "type": "string", "defaultValue": "featureflags-frontdoor" },
+    "backendAKS": { "type": "string", "defaultValue": "aks-featureflags.eastus.cloudapp.azure.com" },
+    "backendGKE": { "type": "string", "defaultValue": "gke-featureflags.us-central1.cloud.goog" },
+    "domainName": { "type": "string", "defaultValue": "featureflags.global.com" }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/frontDoors",
+      "apiVersion": "2020-05-01",
+      "name": "[parameters('frontDoorName')]",
+      "properties": {
+        "enabledState": "Enabled",
+        "routingRules": [
+          {
+            "name": "default-route",
+            "properties": {
+              "frontendEndpoints": [
+                { "id": "[concat(resourceId('Microsoft.Network/frontDoors', parameters('frontDoorName')), '/frontendEndpoints/default')]" }
+              ],
+              "acceptedProtocols": { "http": true, "https": true },
+              "patternsToMatch": ["/*"],
+              "routeConfiguration": {
+                "@odata.type": "#Microsoft.Azure.FrontDoor.Models.FrontdoorForwardingConfiguration",
+                "backendPool": { "id": "[concat(resourceId('Microsoft.Network/frontDoors', parameters('frontDoorName')), '/backendPools/default-pool')]" }
+              }
+            }
+          }
+        ],
+        "backendPools": [
+          {
+            "name": "default-pool",
+            "properties": {
+              "backends": [
+                {
+                  "hostHeader": "[parameters('backendAKS')]",
+                  "address": "[parameters('backendAKS')]",
+                  "enabled": true
+                },
+                {
+                  "hostHeader": "[parameters('backendGKE')]",
+                  "address": "[parameters('backendGKE')]",
+                  "enabled": true
+                }
+              ]
+            }
+          }
+        ],
+        "frontendEndpoints": [
+          {
+            "name": "default",
+            "properties": {
+              "hostHeader": "[parameters('domainName')]",
+              "sessionAffinityEnabledState": "Disabled"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

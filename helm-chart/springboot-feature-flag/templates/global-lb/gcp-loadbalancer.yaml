@@ -1,0 +1,40 @@
+﻿{{- if .Values.globalLoadBalancer.gcpLoadBalancer }}
+# GCP HTTP(S) Load Balancer configuration
+# Requires: kubectl apply -f gcp-loadbalancer.yaml
+# This creates a LoadBalancer service with global static IP
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "springboot-feature-flag.fullname" . }}-global
+  annotations:
+    cloud.google.com/load-balancer-type: "External"
+    networking.gke.io/global-static-ip-name: {{ include "springboot-feature-flag.fullname" . }}-global-ip
+  labels:
+    {{- include "springboot-feature-flag.labels" . | nindent 4 }}
+spec:
+  type: LoadBalancer
+  selector:
+    app: springboot-feature-flag
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+---
+# Health check for GCP Load Balancer
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "springboot-feature-flag.fullname" . }}-health
+  labels:
+    {{- include "springboot-feature-flag.labels" . | nindent 4 }}
+spec:
+  type: NodePort
+  selector:
+    app: springboot-feature-flag
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+{{- end }}

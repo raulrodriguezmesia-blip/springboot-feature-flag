@@ -2,9 +2,9 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "springboot-feature-flag.fullname" . }}-ingress
+  name: {{ include ""springboot-feature-flag.fullname"" . }}-ingress
   labels:
-    {{- include "springboot-feature-flag.labels" . | nindent 4 }}
+    {{- include ""springboot-feature-flag.labels"" . | nindent 4 }}
   annotations:
     # NGINX Ingress Controller
     kubernetes.io/ingress.class: {{ .Values.ingress.className | quote }}
@@ -12,6 +12,10 @@ metadata:
     {{- if .Values.ingress.tls.enabled }}
     # Cert-manager annotation for automatic TLS
     cert-manager.io/cluster-issuer: {{ .Values.certManager.clusterIssuer | quote }}
+    {{- end }}
+    {{- if .Values.disasterRecovery.enabled }}
+    # External DNS for multi-cloud DR
+    external-dns.alpha.kubernetes.io/hostname: {{ .Values.disasterRecovery.domain | quote }}
     {{- end }}
 spec:
   rules:
@@ -22,7 +26,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ include "springboot-feature-flag.fullname" . }}
+                name: {{ include ""springboot-feature-flag.fullname"" . }}
                 port:
                   number: {{ .Values.service.port }}
   {{- if .Values.ingress.tls.enabled }}

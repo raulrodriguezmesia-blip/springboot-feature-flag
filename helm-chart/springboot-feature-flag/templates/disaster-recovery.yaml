@@ -1,0 +1,52 @@
+﻿{{- if .Values.disasterRecovery.enabled }}
+# Azure Traffic Manager - Multi-cloud Disaster Recovery
+# This template should be deployed via Azure CLI or ARM template
+# Not a standard Kubernetes resource - reference for infrastructure setup
+---
+# Traffic Manager Profile configuration
+# Deploy: az network traffic-manager profile create \
+#   --name {{ .Values.disasterRecovery.domain | replace "." "-" }}-dr \
+#   --resource-group {{ .Values.disasterRecovery.resourceGroup }} \
+#   --routing-method Failover \
+#   --unique-dns-name {{ .Values.disasterRecovery.domain | replace "." "-" }}-dr
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "springboot-feature-flag.fullname" . }}-dr-config
+  labels:
+    {{- include "springboot-feature-flag.labels" . | nindent 4 }}
+    disaster-recovery: "enabled"
+data:
+  # Traffic Manager configuration reference
+  trafficManagerProfile: |
+    Name: {{ .Values.disasterRecovery.domain | replace "." "-" }}-dr
+    Domain: {{ .Values.disasterRecovery.domain }}
+    PrimaryEndpoint: {{ .Values.disasterRecovery.primaryCluster }}-featureflags
+    SecondaryEndpoint: {{ .Values.disasterRecovery.secondaryCluster }}-featureflags
+    HealthCheckPath: {{ .Values.disasterRecovery.healthCheckPath }}
+
+  # Deployment instructions
+  DEPLOY_INSTRUCTIONS: |
+    # Azure CLI commands for Traffic Manager setup:
+    # az network traffic-manager profile create \
+    #   --name featureflags-global-dr \
+    #   --resource-group myResourceGroup \
+    #   --routing-method Failover \
+    #   --unique-dns-name featureflags-global-dr
+    #
+    # az network traffic-manager endpoint create \
+    #   --profile-name featureflags-global-dr \
+    #   --resource-group myResourceGroup \
+    #   --name aks-endpoint \
+    #   --type azureEndpoints \
+    #   --target-resource-id /subscriptions/{sub-id}/resourceGroups/{rg}/providers/Microsoft.Network/publicIPAddresses/{aks-ip} \
+    #   --priority 1
+    #
+    # az network traffic-manager endpoint create \
+    #   --profile-name featureflags-global-dr \
+    #   --resource-group myResourceGroup \
+    #   --name gke-endpoint \
+    #   --type externalEndpoints \
+    #   --target gke-featureflags.us-central1.cloud.goog \
+    #   --priority 2
+{{- end }}
