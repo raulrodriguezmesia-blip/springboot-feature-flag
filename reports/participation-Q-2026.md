@@ -5,13 +5,19 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set quarter and year
-        id: quarter
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Generate quarterly report
+        id: generate
         run: |
-          echo "quarter=Q2" >> $GITHUB_OUTPUT
-          echo "year=2026" >> $GITHUB_OUTPUT
+          mkdir -p reports
+          python scripts/generate_report.py Q2 2026
 
       - name: Prepare CTO report
         run: |
-          cp reports/participation-${{ steps.quarter.outputs.quarter }}-${{ steps.quarter.outputs.year }}.md cto-report.md
-          echo "CTO report prepared" > cto-report-${{ steps.quarter.outputs.quarter }}-${{ steps.quarter.outputs.year }}.pdf
+          cp reports/participation-Q2-2026.md cto-report.md
+          echo "CTO report prepared" > cto-report-Q2-2026.pdf
+
