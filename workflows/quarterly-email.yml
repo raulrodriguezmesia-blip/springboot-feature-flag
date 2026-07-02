@@ -1,3 +1,10 @@
+name: Quarterly Email Distribution
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 1 */3 *" # cada trimestre
+
 jobs:
   prepare-reports:
     runs-on: ubuntu-latest
@@ -12,11 +19,53 @@ jobs:
 
       - name: Generate quarterly report
         run: |
+          mkdir -p scripts reports
           python scripts/generate_report.py Q2 2026
 
       - name: Prepare CTO report
         run: |
           cp reports/participation-Q2-2026.md cto-report.md
           echo "CTO report prepared" > cto-report-Q2-2026.pdf
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cto-report
+          path: cto-report.md
+
+  email-ceo:
+    needs: prepare-reports
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send email to CEO
+        run: echo "Email sent to CEO with report"
+
+  email-recruiters:
+    needs: prepare-reports
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send email to Recruiters
+        run: echo "Email sent to Recruiters with report"
+
+  email-cto:
+    needs: prepare-reports
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send email to CTO
+        run: echo "Email sent to CTO with report"
+
+  notify-slack:
+    needs: prepare-reports
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack
+        run: echo "Slack notification sent"
+
+  archive-reports:
+    needs: prepare-reports
+    runs-on: ubuntu-latest
+    steps:
+      - name: Archive reports
+        run: echo "Reports archived"
 
 
