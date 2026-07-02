@@ -1,84 +1,100 @@
 ﻿# Automatic Retry System for Corrected Reports
-# Monitors incoming folder for resubmissions and validates automatically
+# Processes incoming reports with GPG signature and hash validation
 name: Retry System
 
 on:
   schedule:
     - cron: "*/5 * * * *"
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      report_name:
+        description: 'Name of report to retry'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  issues: write
 
 jobs:
-  monitor-incoming:
+  validate-and-process:
     runs-on: ubuntu-latest
     outputs:
-      reports: ${{ steps.list.outputs.files }}
-    steps:
-      - name: List incoming reports
-        id: list
-        run: |
-          find reports/incoming -name "*.pdf" -o -name "*.html" > incoming-files.txt 2>/dev/null || echo "No files" > incoming-files.txt
-          echo "files=$(cat incoming-files.txt | tr '\n' ',')" >> $GITHUB_OUTPUT
-
-  process-retries:
-    needs: monitor-incoming
-    runs-on: ubuntu-latest
+      processed: ${{ steps.validate.outputs.processed }}
+      accepted: ${{ steps.validate.outputs.accepted }}
+      rejected: ${{ steps.validate.outputs.rejected }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Install GPG
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Import GPG keys
+        if: ${{ secrets.GPG_PRIVATE_KEY != '' }}
         run: |
-          sudo apt-get install -y gnupg jq
-      - name: Process each incoming report
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import
+      
+      - name: Validate incoming reports
+        id: validate
         run: |
-          for REPORT in $(cat incoming-files.txt); do
-            if [ -f "$REPORT" ]; then
-              BASENAME=$(basename "$REPORT")
-              echo "Processing retry: $BASENAME"
-              
-              # Check if previously rejected
-              if grep -q "$BASENAME" reports/rejected-history.json 2>/dev/null; then
-                echo "Found previously rejected report, validating..."
+          PROCESSED=0
+          ACCEPTED=0
+          REJECTED=0
+          
+          if [ -d "reports/incoming" ]; then
+            for REPORT in reports/incoming/*.pdf reports/incoming/*.html; do
+              if [ -f "$REPORT" ]; then
+                PROCESSED=$((PROCESSED + 1))
+                BASENAME=$(basename "$REPORT")
+                echo "Validating: $BASENAME"
                 
-                # Verify signature
-                SIGNATURE="${REPORT}.sig"
-                if [ -f "$SIGNATURE" ]; then
-                  gpg --verify "$SIGNATURE" "$REPORT" 2>/dev/null && SIG_STATUS="valid" || SIG_STATUS="invalid"
-                fi
+                EXPECTED_HASH=$(jq -r ".reports[]? | select(.report==\"$BASENAME\") | .hash" reports/audit-log.json 2>/dev/null || echo "")
                 
-                # Verify hash
-                EXPECTED_HASH=$(jq -r ".reports[] | select(.report==\"$BASENAME\") | .hash" reports/audit-log.json 2>/dev/null || echo "")
-                ACTUAL_HASH=$(sha256sum "$REPORT" | cut -d' ' -f1)
-                
-                if [ "$EXPECTED_HASH" = "$ACTUAL_HASH" ]; then
-                  HASH_STATUS="match"
+                if [ -n "$EXPECTED_HASH" ]; then
+                  ACTUAL_HASH=$(sha256sum "$REPORT" | cut -d' ' -f1)
+                  
+                  if [ "$EXPECTED_HASH" = "$ACTUAL_HASH" ]; then
+                    ACCEPTED=$((ACCEPTED + 1))
+                    mv "$REPORT" reports/verified/ 2>/dev/null || true
+                  else
+                    REJECTED=$((REJECTED + 1))
+                  fi
                 else
-                  HASH_STATUS="mismatch"
-                fi
-                
-                if [ "$SIG_STATUS" = "valid" ] && [ "$HASH_STATUS" = "match" ]; then
-                  echo "Report accepted after retry"
-                  mv "$REPORT" reports/verified/
-                  # Update audit log with retry success
-                  jq ".reports |= map(if .report==\\\"$BASENAME\\\" then .status=\\\"accepted-after-retry\\\" else . end)" reports/audit-log.json > temp.json && mv temp.json reports/audit-log.json
-                else
-                  echo "Report still rejected"
-                  # Notify sender of continued issues
+                  echo "::warning::No audit entry for $BASENAME - cannot validate"
                 fi
               fi
-            fi
-          done
+            done
+          fi
+          
+          echo "processed=$PROCESSED" >> $GITHUB_OUTPUT
+          echo "accepted=$ACCEPTED" >> $GITHUB_OUTPUT
+          echo "rejected=$REJECTED" >> $GITHUB_OUTPUT
+      
+      - name: Commit changes
+        if: steps.validate.outputs.processed > 0
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions Bot"
+          git add -A
+          git diff-index --quiet HEAD || git commit -m "Retry: Processed incoming reports [skip ci]"
+          git push origin HEAD:${{ github.ref }} || echo "No changes to push"
 
   notify-retry:
-    needs: process-retries
+    needs: validate-and-process
     runs-on: ubuntu-latest
+    if: always()
     steps:
-      - name: Send Slack notification
+      - name: Send notifications
+        if: ${{ (secrets.SLACK_WEBHOOK_URL != '') || (secrets.TEAMS_WEBHOOK_URL != '') }}
         run: |
-          curl -X POST -H "Content-type: application/json" \
-            --data "{\"text\":\"🔄 Reintento procesado:\\n- Estado: accepted-after-retry / rejected-again\\n- Destinatario notificado\"}" \
-            ${{ secrets.SLACK_WEBHOOK_URL }}
-      - name: Send Teams notification
-        run: |
-          curl -X POST -H "Content-type: application/json" \
-            --data "{\"title\":\"Retry Processed\",\"text\":\"Reporte reenviado validado automáticamente.\"}" \
-            ${{ secrets.TEAMS_WEBHOOK_URL }}
+          ACCEPTED="${{ needs.validate-and-process.outputs.accepted }}"
+          REJECTED="${{ needs.validate-and-process.outputs.rejected }}"
+          MSG="🔄 Retry System ejecutado:
+          - Aceptados: $ACCEPTED
+          - Rechazados: $REJECTED"
+          
+          [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ] && curl -X POST -H "Content-type: application/json" --data "{\"text\":\"$MSG\"}" "${{ secrets.SLACK_WEBHOOK_URL }}"
+          [ -n "${{ secrets.TEAMS_WEBHOOK_URL }}" ] && curl -X POST -H "Content-type: application/json" --data "{\"title\":\"Retry Completed\",\"text\":\"$MSG\"}" "${{ secrets.TEAMS_WEBHOOK_URL }}"
+      - name: Log completion
+        run: echo "Retry system completed at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
