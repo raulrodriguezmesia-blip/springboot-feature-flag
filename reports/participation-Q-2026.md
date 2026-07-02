@@ -3,17 +3,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Ensure reports folder exists
-        run: mkdir -p reports
-
-      - name: Generate quarterly report if missing
+      - name: Set quarter and year
+        id: quarter
         run: |
-          if [ ! -f reports/participation-Q-2026.md ]; then
-            echo "# Quarterly Participation Report" > reports/participation-Q-2026.md
-            echo "Generated automatically as fallback." >> reports/participation-Q-2026.md
-          fi
+          echo "quarter=Q2" >> $GITHUB_OUTPUT
+          echo "year=2026" >> $GITHUB_OUTPUT
 
-      - name: Copy report for CTO
-        run: cp reports/participation-Q-2026.md cto-report.md
+      - name: Prepare CTO report
+        run: |
+          cp reports/participation-${{ steps.quarter.outputs.quarter }}-${{ steps.quarter.outputs.year }}.md cto-report.md
+          echo "CTO report prepared" > cto-report-${{ steps.quarter.outputs.quarter }}-${{ steps.quarter.outputs.year }}.pdf
