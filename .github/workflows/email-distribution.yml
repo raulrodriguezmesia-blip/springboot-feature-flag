@@ -81,12 +81,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Slack notification
-        continue-on-error: true
-        run: >
-          curl -X POST
-          -H "Content-type: application/json"
-          --data "{\"text\":\"📧 Reportes ejecutivos enviados:\n- CTO: Technical Overview\n- CEO: Executive Summary\n- Recruiters: Talent Branding\"}"
-          ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -z "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            echo "⚠️ SLACK_WEBHOOK_URL no configurado. Notificación omitida."
+            exit 0
+          fi
+          curl -X POST \
+            -H "Content-type: application/json" \
+            --data "{\"text\":\"📧 Reportes ejecutivos enviados:\\n- CTO: Technical Overview\\n- CEO: Executive Summary\\n- Recruiters: Talent Branding\"}" \
+            "${{ secrets.SLACK_WEBHOOK_URL }}"
 
   archive-reports:
     needs: [email-cto, email-ceo, email-recruiters]

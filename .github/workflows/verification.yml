@@ -93,12 +93,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Slack notification
-        continue-on-error: true
-        run: >
-          curl -X POST
-          -H "Content-type: application/json"
-          --data "{\"text\":\"❌ Reporte rechazado:\n- Archivo: reporte.pdf\n- Motivo: Firma inválida / Hash mismatch\n- Retroalimentación enviada al remitente\"}"
-          ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -z "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            echo "⚠️ SLACK_WEBHOOK_URL no configurado. Notificación omitida."
+            exit 0
+          fi
+          curl -X POST \
+            -H "Content-type: application/json" \
+            --data "{\"text\":\"❌ Reporte rechazado:\\n- Archivo: reporte.pdf\\n- Motivo: Firma inválida / Hash mismatch\\n- Retroalimentación enviada al remitente\"}" \
+            "${{ secrets.SLACK_WEBHOOK_URL }}"
 
   archive-accepted:
     needs: validation-decision
@@ -117,9 +120,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Slack notification
-        continue-on-error: true
-        run: >
-          curl -X POST
-          -H "Content-type: application/json"
-          --data "{\"text\":\"✅ Reporte validado y aceptado\"}"
-          ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -z "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            echo "⚠️ SLACK_WEBHOOK_URL no configurado. Notificación omitida."
+            exit 0
+          fi
+          curl -X POST \
+            -H "Content-type: application/json" \
+            --data "{\"text\":\"✅ Reporte validado y aceptado\"}" \
+            "${{ secrets.SLACK_WEBHOOK_URL }}"

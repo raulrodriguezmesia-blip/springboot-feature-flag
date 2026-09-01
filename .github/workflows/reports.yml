@@ -118,21 +118,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Slack notification
-        continue-on-error: true
-        run: >
-          curl -X POST
-          -H "Content-type: application/json"
-          --data '{"text":"📂 Resilience Report archivado en la nube:\n- OneDrive: https://onedrive.live.com/ResilienceReports/resilience-historical-${{ needs.export-grafana-dashboard.outputs.report-date }}-v${{ needs.export-grafana-dashboard.outputs.report-version }}.pdf\n- Google Drive: https://drive.google.com/ResilienceReports/resilience-historical-${{ needs.export-grafana-dashboard.outputs.report-date }}-v${{ needs.export-grafana-dashboard.outputs.report-version }}.pdf"}'
-          ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -z "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            echo "⚠️ SLACK_WEBHOOK_URL no configurado. Notificación omitida."
+            exit 0
+          fi
+          curl -X POST \
+            -H 'Content-type: application/json' \
+            --data '{"text":"📂 Resilience Report archivado en la nube:\n- OneDrive: https://onedrive.live.com/ResilienceReports/resilience-historical-${{ needs.export-grafana-dashboard.outputs.report-date }}-v${{ needs.export-grafana-dashboard.outputs.report-version }}.pdf\n- Google Drive: https://drive.google.com/ResilienceReports/resilience-historical-${{ needs.export-grafana-dashboard.outputs.report-date }}-v${{ needs.export-grafana-dashboard.outputs.report-version }}.pdf"}' \
+            "${{ secrets.SLACK_WEBHOOK_URL }}"
 
   notify-teams:
     needs: update-index
     runs-on: ubuntu-latest
     steps:
       - name: Send Teams notification
-        continue-on-error: true
-        run: >
-          curl -X POST
-          -H "Content-type: application/json"
-          --data '{"title":"Resilience Report Archivado","text":"Reporte histórico de resiliencia archivado en la nube con control de versiones."}'
-          ${{ secrets.TEAMS_WEBHOOK_URL }}
+        run: |
+          if [ -z "${{ secrets.TEAMS_WEBHOOK_URL }}" ]; then
+            echo "⚠️ TEAMS_WEBHOOK_URL no configurado. Notificación omitida."
+            exit 0
+          fi
+          curl -X POST \
+            -H 'Content-type: application/json' \
+            --data '{"title":"Resilience Report Archivado","text":"Reporte histórico de resiliencia archivado en la nube con control de versiones."}' \
+            "${{ secrets.TEAMS_WEBHOOK_URL }}"

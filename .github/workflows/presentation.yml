@@ -96,16 +96,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Slack notification
-        continue-on-error: true
-        run: >
-          curl -X POST
-          -H "Content-type: application/json"
-          --data "{\"text\":\"🌍 Presentación generada automáticamente:\n- Audiencia: ${{ needs.read-calendar.outputs.audience }}\n- Idioma: automático\n- Formato: PPTX/PDF/Canva\"}"
-          ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -z "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            echo "⚠️ SLACK_WEBHOOK_URL no configurado. Notificación omitida."
+            exit 0
+          fi
+          curl -X POST \
+            -H "Content-type: application/json" \
+            --data "{\"text\":\"🌍 Presentación generada automáticamente:\\n- Audiencia: ${{ needs.read-calendar.outputs.audience }}\\n- Idioma: automático\\n- Formato: PPTX/PDF/Canva\"}" \
+            "${{ secrets.SLACK_WEBHOOK_URL }}"
       - name: Send Teams notification
-        continue-on-error: true
-        run: >
-          curl -X POST
-          -H "Content-type: application/json"
-          --data "{\"title\":\"Calendar-Based Presentation\",\"text\":\"Presentación generada automáticamente detectando audiencia del calendario.\"}"
-          ${{ secrets.TEAMS_WEBHOOK_URL }}
+        run: |
+          if [ -z "${{ secrets.TEAMS_WEBHOOK_URL }}" ]; then
+            echo "⚠️ TEAMS_WEBHOOK_URL no configurado. Notificación omitida."
+            exit 0
+          fi
+          curl -X POST \
+            -H "Content-type: application/json" \
+            --data "{\"title\":\"Calendar-Based Presentation\",\"text\":\"Presentación generada automáticamente detectando audiencia del calendario.\"}" \
+            "${{ secrets.TEAMS_WEBHOOK_URL }}"

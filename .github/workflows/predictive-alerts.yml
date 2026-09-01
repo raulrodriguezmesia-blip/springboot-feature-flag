@@ -91,12 +91,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send high risk alert
-        continue-on-error: true
-        run: >
-          curl -X POST
-          -H "Content-type: application/json"
-          --data "{\"text\":\"🔮 Alerta predictiva:\n- Riesgo alto de rechazo en próximos 7 días\n- Audiencia: CEO\n- Idioma: Español\n- Acción recomendada: revisar claves de firma y hashes\"}"
-          ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -z "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            echo "⚠️ SLACK_WEBHOOK_URL no configurado. Notificación omitida."
+            exit 0
+          fi
+          curl -X POST \
+            -H "Content-type: application/json" \
+            --data "{\"text\":\"🔮 Alerta predictiva:\\n- Riesgo alto de rechazo en próximos 7 días\\n- Audiencia: CEO\\n- Idioma: Español\\n- Acción recomendada: revisar claves de firma y hashes\"}" \
+            "${{ secrets.SLACK_WEBHOOK_URL }}"
 
   alert-medium-risk:
     needs: predict
@@ -104,12 +107,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send medium risk alert
-        continue-on-error: true
-        run: >
-          curl -X POST
-          -H "Content-type: application/json"
-          --data "{\"text\":\"⚠️ Alerta predictiva:\n- Riesgo medio de rechazo\n- Monitoreo activo\"}"
-          ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -z "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            echo "⚠️ SLACK_WEBHOOK_URL no configurado. Notificación omitida."
+            exit 0
+          fi
+          curl -X POST \
+            -H "Content-type: application/json" \
+            --data "{\"text\":\"⚠️ Alerta predictiva:\\n- Riesgo medio de rechazo\\n- Monitoreo activo\"}" \
+            "${{ secrets.SLACK_WEBHOOK_URL }}"
 
   update-dashboard:
     needs: predict
