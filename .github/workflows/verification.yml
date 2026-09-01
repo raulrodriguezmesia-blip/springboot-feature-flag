@@ -93,10 +93,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Slack notification
-        run: |
-          curl -X POST -H "Content-type: application/json" \
-            --data "{\"text\":\"❌ Reporte rechazado:\\n- Archivo: reporte.pdf\\n- Motivo: Firma inválida / Hash mismatch\\n- Retroalimentación enviada al remitente\"}" \
-            ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' && secrets.SLACK_WEBHOOK_URL != null }}
+        run: >
+          curl -X POST
+          -H "Content-type: application/json"
+          --data "{\"text\":\"❌ Reporte rechazado:\n- Archivo: reporte.pdf\n- Motivo: Firma inválida / Hash mismatch\n- Retroalimentación enviada al remitente\"}"
+          ${{ secrets.SLACK_WEBHOOK_URL }}
 
   archive-accepted:
     needs: validation-decision
@@ -115,7 +117,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Slack notification
-        run: |
-          curl -X POST -H "Content-type: application/json" \
-            --data "{\"text\":\"✅ Reporte validado y aceptado\"}" \
-            ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' && secrets.SLACK_WEBHOOK_URL != null }}
+        run: >
+          curl -X POST
+          -H "Content-type: application/json"
+          --data "{\"text\":\"✅ Reporte validado y aceptado\"}"
+          ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -81,10 +81,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Slack notification
-        run: |
-          curl -X POST -H "Content-type: application/json" \
-            --data "{\"text\":\"📧 Reportes ejecutivos enviados:\\n- CTO: Technical Overview\\n- CEO: Executive Summary\\n- Recruiters: Talent Branding\"}" \
-            ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' && secrets.SLACK_WEBHOOK_URL != null }}
+        run: >
+          curl -X POST
+          -H "Content-type: application/json"
+          --data "{\"text\":\"📧 Reportes ejecutivos enviados:\n- CTO: Technical Overview\n- CEO: Executive Summary\n- Recruiters: Talent Branding\"}"
+          ${{ secrets.SLACK_WEBHOOK_URL }}
 
   archive-reports:
     needs: [email-cto, email-ceo, email-recruiters]

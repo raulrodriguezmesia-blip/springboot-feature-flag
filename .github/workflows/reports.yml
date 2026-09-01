@@ -118,17 +118,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Slack notification
-        run: |
-          curl -X POST -H 'Content-type: application/json' \
-            --data '{"text":"📂 Resilience Report archivado en la nube:\n- OneDrive: https://onedrive.live.com/ResilienceReports/resilience-historical-${{ needs.export-grafana-dashboard.outputs.report-date }}-v${{ needs.export-grafana-dashboard.outputs.report-version }}.pdf\n- Google Drive: https://drive.google.com/ResilienceReports/resilience-historical-${{ needs.export-grafana-dashboard.outputs.report-date }}-v${{ needs.export-grafana-dashboard.outputs.report-version }}.pdf"}' \
-            ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' && secrets.SLACK_WEBHOOK_URL != null }}
+        run: >
+          curl -X POST
+          -H "Content-type: application/json"
+          --data '{"text":"📂 Resilience Report archivado en la nube:\n- OneDrive: https://onedrive.live.com/ResilienceReports/resilience-historical-${{ needs.export-grafana-dashboard.outputs.report-date }}-v${{ needs.export-grafana-dashboard.outputs.report-version }}.pdf\n- Google Drive: https://drive.google.com/ResilienceReports/resilience-historical-${{ needs.export-grafana-dashboard.outputs.report-date }}-v${{ needs.export-grafana-dashboard.outputs.report-version }}.pdf"}'
+          ${{ secrets.SLACK_WEBHOOK_URL }}
 
   notify-teams:
     needs: update-index
     runs-on: ubuntu-latest
     steps:
       - name: Send Teams notification
-        run: |
-          curl -X POST -H 'Content-type: application/json' \
-            --data '{"title":"Resilience Report Archivado","text":"Reporte histórico de resiliencia archivado en la nube con control de versiones."}' \
-            ${{ secrets.TEAMS_WEBHOOK_URL }}
+        if: ${{ secrets.TEAMS_WEBHOOK_URL != '' && secrets.TEAMS_WEBHOOK_URL != null }}
+        run: >
+          curl -X POST
+          -H "Content-type: application/json"
+          --data '{"title":"Resilience Report Archivado","text":"Reporte histórico de resiliencia archivado en la nube con control de versiones."}'
+          ${{ secrets.TEAMS_WEBHOOK_URL }}

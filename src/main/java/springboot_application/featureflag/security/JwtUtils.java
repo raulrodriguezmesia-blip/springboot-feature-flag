@@ -95,7 +95,10 @@ public class JwtUtils {
     }
 
     public synchronized void rotateKey() {
-        String newKey = UUID.randomUUID().toString();
+        byte[] keyBytes = new byte[32];
+        java.security.SecureRandom secureRandom = new java.security.SecureRandom();
+        secureRandom.nextBytes(keyBytes);
+        String newKey = java.util.Base64.getEncoder().encodeToString(keyBytes);
         String newKeyId = Base64.getEncoder().encodeToString(newKey.getBytes());
         SecretKey secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(newKey));
         keys.put(newKeyId, secretKey);

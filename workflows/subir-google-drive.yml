@@ -1,0 +1,26 @@
+name: Subir a Google Drive
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  subir-google-drive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Autenticar en Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Subir archivos a Google Drive
+        run: |
+          echo "Subiendo archivos a Google Drive..."
+          # gcloud storage cp ./reports/* gs://my-bucket/reports/

@@ -79,15 +79,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send preventive notification to Slack
-        run: |
-          curl -X POST -H "Content-type: application/json" \
-            --data "{\"text\":\"🛡️ Acción correctiva proactiva:\\n- Riesgo alto detectado por IA\\n- Validaciones reforzadas ejecutadas\\n- Reportes bajo control preventivo\"}" \
-            ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' && secrets.SLACK_WEBHOOK_URL != null }}
+        run: >
+          curl -X POST
+          -H "Content-type: application/json"
+          --data "{\"text\":\"🛡️ Acción correctiva proactiva:\n- Riesgo alto detectado por IA\n- Validaciones reforzadas ejecutadas\n- Reportes bajo control preventivo\"}"
+          ${{ secrets.SLACK_WEBHOOK_URL }}
       - name: Send Teams notification
-        run: |
-          curl -X POST -H "Content-type: application/json" \
-            --data "{\"title\":\"Proactive Corrections Activated\",\"text\":\"Validaciones extra activadas por riesgo alto predictivo.\"}" \
-            ${{ secrets.TEAMS_WEBHOOK_URL }}
+        if: ${{ secrets.TEAMS_WEBHOOK_URL != '' && secrets.TEAMS_WEBHOOK_URL != null }}
+        run: >
+          curl -X POST
+          -H "Content-type: application/json"
+          --data "{\"title\":\"Proactive Corrections Activated\",\"text\":\"Validaciones extra activadas por riesgo alto predictivo.\"}"
+          ${{ secrets.TEAMS_WEBHOOK_URL }}
 
   archive-preemptive:
     needs: auto-correction

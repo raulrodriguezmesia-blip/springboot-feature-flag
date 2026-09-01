@@ -33,7 +33,7 @@ public class WebhookNotifier {
      * @param modifiedBy The user who made the change
      */
     public void notifyFlagChange(String eventType, String flagKey, String oldValue, String newValue, String modifiedBy) {
-        if (!enabled || webhookUrl.isBlank()) {
+        if (!enabled || webhookUrl == null || webhookUrl.isBlank()) {
             // Webhook is not configured or disabled
             return;
         }
