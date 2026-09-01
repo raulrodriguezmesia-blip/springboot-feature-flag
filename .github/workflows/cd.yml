@@ -150,7 +150,7 @@ jobs:
           name: resilience-report
           path: ./reports
       - name: Send Slack notification
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' && secrets.SLACK_WEBHOOK_URL != null }}
+        continue-on-error: true
         run: >
           curl -X POST
           -H "Content-type: application/json"
@@ -168,7 +168,7 @@ jobs:
           name: resilience-report
           path: ./reports
       - name: Send Teams notification
-        if: ${{ secrets.TEAMS_WEBHOOK_URL != '' && secrets.TEAMS_WEBHOOK_URL != null }}
+        continue-on-error: true
         run: >
           curl -X POST
           -H "Content-type: application/json"

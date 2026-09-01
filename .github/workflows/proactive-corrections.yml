@@ -79,14 +79,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send preventive notification to Slack
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' && secrets.SLACK_WEBHOOK_URL != null }}
+        continue-on-error: true
         run: >
           curl -X POST
           -H "Content-type: application/json"
           --data "{\"text\":\"🛡️ Acción correctiva proactiva:\n- Riesgo alto detectado por IA\n- Validaciones reforzadas ejecutadas\n- Reportes bajo control preventivo\"}"
           ${{ secrets.SLACK_WEBHOOK_URL }}
       - name: Send Teams notification
-        if: ${{ secrets.TEAMS_WEBHOOK_URL != '' && secrets.TEAMS_WEBHOOK_URL != null }}
+        continue-on-error: true
         run: >
           curl -X POST
           -H "Content-type: application/json"

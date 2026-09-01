@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send high risk alert
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' && secrets.SLACK_WEBHOOK_URL != null }}
+        continue-on-error: true
         run: >
           curl -X POST
           -H "Content-type: application/json"
@@ -104,7 +104,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send medium risk alert
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' && secrets.SLACK_WEBHOOK_URL != null }}
+        continue-on-error: true
         run: >
           curl -X POST
           -H "Content-type: application/json"

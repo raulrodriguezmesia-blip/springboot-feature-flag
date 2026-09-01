@@ -96,14 +96,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Slack notification
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' && secrets.SLACK_WEBHOOK_URL != null }}
+        continue-on-error: true
         run: >
           curl -X POST
           -H "Content-type: application/json"
           --data "{\"text\":\"🌍 Presentación generada automáticamente:\n- Audiencia: ${{ needs.read-calendar.outputs.audience }}\n- Idioma: automático\n- Formato: PPTX/PDF/Canva\"}"
           ${{ secrets.SLACK_WEBHOOK_URL }}
       - name: Send Teams notification
-        if: ${{ secrets.TEAMS_WEBHOOK_URL != '' && secrets.TEAMS_WEBHOOK_URL != null }}
+        continue-on-error: true
         run: >
           curl -X POST
           -H "Content-type: application/json"
