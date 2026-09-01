@@ -150,10 +150,12 @@ jobs:
           name: resilience-report
           path: ./reports
       - name: Send Slack notification
-        run: |
-          curl -X POST -H 'Content-type: application/json' \
-            --data '{"text":"📊 Resilience Report generado - Spring Boot Feature Flag\n- PDF: resilience-dashboard.pdf\n- HTML: resilience-dashboard.html"}' \
-            ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' && secrets.SLACK_WEBHOOK_URL != null }}
+        run: >
+          curl -X POST
+          -H "Content-type: application/json"
+          --data '{"text":"📊 Resilience Report generado - Spring Boot Feature Flag\n- PDF: resilience-dashboard.pdf\n- HTML: resilience-dashboard.html"}'
+          ${{ secrets.SLACK_WEBHOOK_URL }}
 
   notify-teams:
     needs: generate-report
@@ -166,7 +168,9 @@ jobs:
           name: resilience-report
           path: ./reports
       - name: Send Teams notification
-        run: |
-          curl -X POST -H 'Content-type: application/json' \
-            --data '{"title":"Resilience Report","text":"Reporte de resiliencia generado automáticamente para springboot-feature-flag. Failover y chaos tests completados."}' \
-            ${{ secrets.TEAMS_WEBHOOK_URL }}
+        if: ${{ secrets.TEAMS_WEBHOOK_URL != '' && secrets.TEAMS_WEBHOOK_URL != null }}
+        run: >
+          curl -X POST
+          -H "Content-type: application/json"
+          --data '{"title":"Resilience Report","text":"Reporte de resiliencia generado automáticamente para springboot-feature-flag. Failover y chaos tests completados."}'
+          ${{ secrets.TEAMS_WEBHOOK_URL }}
