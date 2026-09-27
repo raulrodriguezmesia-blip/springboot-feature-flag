@@ -22,12 +22,14 @@ jobs:
           echo "Fetching reports_verified_total, reports_rejected_total from Prometheus"
           # Would integrate with Prometheus HTTP API in production
 
-  train-model:
+train-model:
     needs: collect-data
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Create ML directory
+        run: mkdir -p ml
       - name: Train prediction model
         run: |
           # Python ML model training script
